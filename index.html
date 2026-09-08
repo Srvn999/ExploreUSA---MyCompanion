@@ -381,7 +381,7 @@
   <div class="screen" id="screen-itineraire">
     <div class="trip-header"><div><div class="eyebrow">Votre roadbook</div><h1>Itinéraire</h1></div></div>
     <div class="day-pills" id="daypills"></div>
-    <div class="timeline">
+    <div class="timeline" id="itineraryTimeline">
       <div class="titem">
         <div class="time">09:00</div>
         <div class="card">
@@ -495,6 +495,7 @@
   <div class="screen" id="screen-vols">
     <div class="trip-header"><div><div class="eyebrow">Vos billets</div><h1>Vols</h1></div></div>
 
+    <div id="flightsList">
     <div class="flight-card">
       <div class="flight-top"><span class="flight-tag">ALLER · AF 022</span><span class="flight-status">À l'heure</span></div>
       <div class="flight-route"><span class="city">CDG</span><div class="line"></div><span class="city">ORD</span></div>
@@ -534,6 +535,7 @@
         <div class="bp-row"><span>Porte</span><b>Communiquée à J-1</b></div>
         <div class="bp-row"><span>Siège</span><b>31D</b></div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -609,6 +611,7 @@
       <div class="switch on" id="syncSwitch" onclick="toggleSwitch(this)"></div>
     </div>
 
+    <div id="albumSections">
     <div class="album-section">
       <div class="sec-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg>
@@ -634,6 +637,7 @@
         <div class="photo-tile sw4" data-owner="zoe"></div>
         <div class="photo-tile sw1" data-owner="alexia"></div>
       </div>
+    </div>
     </div>
 
     <div class="fab-panel" id="fabPanel">
@@ -759,6 +763,25 @@
   computeTip();
   convert();
 </script>
+
+<!--
+  Connexion Supabase (optionnelle) : renseignez les 3 valeurs ci-dessous
+  pour remplacer le contenu de démo par les vraies données du voyage.
+  Voir SETUP.md pour la procédure complète. Tant que supabaseUrl est vide,
+  le prototype reste 100% statique, exactement comme avant.
+-->
+<script>
+  window.MYCOMPANION_CONFIG = {
+    supabaseUrl: "",       // ex: "https://xxxxxxxx.supabase.co"
+    supabaseAnonKey: "",   // clé "anon public" du projet Supabase
+    tripId: ""             // uuid de la ligne dans la table "trips"
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/data.js"></script>
+<script src="js/render.js"></script>
+<script src="js/bootstrap.js"></script>
 
 </body>
 </html>
