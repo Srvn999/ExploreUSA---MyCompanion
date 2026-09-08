@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>My Companion - ExploreUSA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1C2B45;
+    --navy-light:#2C4066;
+    --terracotta:#C15B3C;
+    --terracotta-dark:#A64A2E;
+    --sand:#F4EBDA;
+    --sand-dark:#E9DCC0;
+    --gold:#D9A544;
+    --sage:#6B7A56;
+    --ink:#21201C;
+    --white:#FFFFFF;
+    --line: rgba(28,43,69,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Manrope',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 15% 10%, #eadfc0 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #e3d3ae 0%, transparent 45%),
+      #d9cba3;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 16px;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif; margin:0;}
+  .phone{
+    width:390px;
+    height:844px;
+    background:var(--sand);
+    border-radius:44px;
+    border:10px solid var(--navy);
+    box-shadow: 0 30px 60px -20px rgba(28,20,10,0.5), 0 0 0 1px rgba(255,255,255,0.4) inset;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .statusbar{
+    height:30px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 26px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+    flex-shrink:0;
+  }
+  .notch{
+    position:absolute;
+    top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:24px;
+    background:var(--navy);
+    border-radius:0 0 16px 16px;
+    z-index:5;
+  }
+  .screen{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 20px 100px;
+    scrollbar-width:none;
+  }
+  .screen::-webkit-scrollbar{display:none;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .trip-header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin:6px 0 18px;
+  }
+  .trip-header .eyebrow{
+    font-size:12.5px; color:var(--terracotta-dark); font-weight:700;
+  }
+  .trip-header h1{ font-size:22px; font-weight:600; color:var(--navy); margin-top:2px;}
+  .greeting{font-size:23px; font-weight:500; color:var(--navy); margin:4px 0 2px;}
+  .subgreeting{font-size:14px; color:#5b5748; margin-bottom:18px;}
+  .next-card{
+    background:var(--navy);
+    color:var(--sand);
+    border-radius:20px;
+    padding:18px 20px;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .next-card::after{
+    content:"";
+    position:absolute; right:-30px; top:-30px;
+    width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle, rgba(217,165,68,0.35), transparent 70%);
+  }
+  .next-card .label{font-size:11.5px; text-transform:none; letter-spacing:.02em; color:var(--gold); font-weight:700;}
+  .next-card h3{font-size:19px; font-weight:500; margin:6px 0 4px; color:#fff;}
+  .next-card .meta{font-size:13px; color:#c9d0dd;}
+  .tools-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px;
+  }
+  .tool-tile{
+    background:var(--white);
+    border-radius:16px;
+    padding:16px 14px;
+    border:1px solid var(--line);
+    cursor:pointer;
+    transition:transform .15s ease;
+  }
+  .tool-tile:active{transform:scale(.97);}
+  .tool-tile .ic{width:26px; height:26px; margin-bottom:10px; color:var(--terracotta);}
+  .tool-tile h4{font-size:14.5px; font-weight:700; margin:0 0 3px; color:var(--navy);}
+  .tool-tile p{font-size:12px; color:#6b6656; margin:0; line-height:1.35;}
+  .alexia-card{
+    background:var(--sand-dark);
+    border:1px dashed var(--terracotta);
+    border-radius:16px;
+    padding:16px;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .alexia-avatar{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    background:var(--terracotta); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-size:16px; font-weight:600;
+  }
+  .alexia-card p{font-size:13.5px; line-height:1.45; margin:0 0 10px; color:var(--ink);}
+  .alexia-card button{
+    border:none; background:var(--navy); color:#fff; font-family:'Manrope';
+    font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:20px; cursor:pointer;
+  }
+  .day-pills{display:flex; gap:8px; overflow-x:auto; margin-bottom:20px; padding-bottom:4px;}
+  .day-pills::-webkit-scrollbar{display:none;}
+  .day-pill{
+    flex-shrink:0; padding:8px 14px; border-radius:20px; font-size:13px; font-weight:700;
+    background:var(--white); border:1px solid var(--line); color:#6b6656; cursor:pointer;
+  }
+  .day-pill.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .timeline{position:relative; padding-left:22px;}
+  .timeline::before{
+    content:""; position:absolute; left:5px; top:6px; bottom:6px; width:2px;
+    background:linear-gradient(var(--terracotta), var(--gold));
+  }
+  .titem{position:relative; margin-bottom:20px;}
+  .titem::before{
+    content:""; position:absolute; left:-22px; top:4px; width:12px; height:12px; border-radius:50%;
+    background:var(--terracotta); border:3px solid var(--sand);
+  }
+  .titem .time{font-size:12px; font-weight:700; color:var(--terracotta-dark); margin-bottom:4px;}
+  .titem .card{
+    background:var(--white); border-radius:14px; padding:14px; border:1px solid var(--line);
+  }
+  .titem .row1{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .titem h4{font-size:14.5px; font-weight:700; color:var(--navy); margin:0;}
+  .titem .type{font-size:11px; color:#8a8470; font-weight:600; margin-bottom:2px;}
+  .maplink{
+    flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--sand-dark);
+    display:flex; align-items:center; justify-content:center; color:var(--navy); cursor:pointer;
+  }
+  .badges{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .badge{font-size:11px; font-weight:700; padding:4px 9px; border-radius:20px;}
+  .badge.ok{background:#E4EBDD; color:var(--sage);}
+  .badge.due{background:#FBEADD; color:var(--terracotta-dark);}
+  .badge.info{background:#EDE7DA; color:#6b6656;}
+  .subtabs{display:flex; gap:6px; background:var(--sand-dark); padding:4px; border-radius:14px; margin-bottom:20px;}
+  .subtab{flex:1; text-align:center; padding:9px 0; font-size:13px; font-weight:700; border-radius:11px; cursor:pointer; color:#6b6656;}
+  .subtab.active{background:var(--white); color:var(--navy);}
+  .sign-panel{
+    background:var(--navy); color:#fff; border-radius:18px; padding:22px 20px; margin-bottom:18px;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 14px);
+    border:3px solid var(--gold);
+  }
+  .sign-rate{font-family:'Fraunces',serif; font-size:26px; color:var(--gold); margin-bottom:2px;}
+  .sign-updated{font-size:11.5px; color:#a9b2c4;}
+  .convert-row{display:flex; align-items:center; gap:10px; margin-top:16px;}
+  .convert-field{flex:1;}
+  .convert-field label{font-size:11px; color:#a9b2c4; display:block; margin-bottom:4px;}
+  .convert-field input{
+    width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
+    border-radius:10px; padding:10px 12px; color:#fff; font-size:17px; font-family:'Manrope'; font-weight:700;
+  }
+  .swap{width:34px; height:34px; border-radius:50%; background:var(--terracotta); display:flex; align-items:center; justify-content:center; color:#fff; margin-top:16px; flex-shrink:0; cursor:pointer;}
+  .receipt{
+    background:var(--white); border-radius:4px; padding:20px 18px; position:relative;
+    box-shadow:0 10px 20px -12px rgba(28,20,10,0.25);
+  }
+  .receipt::before, .receipt::after{
+    content:""; position:absolute; left:0; right:0; height:10px;
+    background: linear-gradient(45deg, transparent 33.3%, var(--sand) 33.3%, var(--sand) 66.6%, transparent 66.6%), linear-gradient(-45deg, transparent 33.3%, var(--sand) 33.3%, var(--sand) 66.6%, transparent 66.6%);
+    background-size:14px 14px; background-color:var(--white);
+  }
+  .receipt::before{top:-9px;}
+  .receipt::after{bottom:-9px; transform:rotate(180deg);}
+  .field-row{margin-bottom:14px;}
+  .field-row label{font-size:12px; font-weight:700; color:#6b6656; display:block; margin-bottom:6px;}
+  .field-row select, .field-row input[type=number]{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); font-family:'Manrope'; font-size:15px; font-weight:600; color:var(--ink);
+  }
+  .satisfaction{display:flex; gap:8px;}
+  .sat-opt{flex:1; text-align:center; padding:10px 4px; border-radius:10px; border:1px solid var(--line); font-size:12.5px; font-weight:700; cursor:pointer; color:#6b6656;}
+  .sat-opt.active{background:var(--terracotta); border-color:var(--terracotta); color:#fff;}
+  .receipt-total{border-top:1px dashed var(--line); margin-top:14px; padding-top:14px;}
+  .rt-row{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; color:#5b5748;}
+  .rt-row.grand{font-size:18px; font-weight:800; color:var(--navy); margin-top:8px;}
+  .rt-row span:last-child{font-variant-numeric:tabular-nums;}
+  .flight-card{
+    background:var(--white); border-radius:16px; border:1px solid var(--line); padding:16px; margin-bottom:14px;
+  }
+  .flight-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .flight-tag{font-size:11px; font-weight:800; color:var(--terracotta-dark);}
+  .flight-status{font-size:11px; font-weight:700; color:var(--sage); background:#E4EBDD; padding:3px 9px; border-radius:20px;}
+  .flight-route{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .flight-route .city{font-family:'Fraunces',serif; font-size:19px; color:var(--navy); font-weight:600;}
+  .flight-route .line{flex:1; height:1px; background:var(--line); position:relative;}
+  .flight-route .line::after{content:"✈"; position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:12px; color:var(--terracotta);}
+  .flight-meta{font-size:12.5px; color:#6b6656; margin-bottom:12px;}
+  .flight-btn{
+    width:100%; background:var(--sand-dark); border:none; padding:10px; border-radius:10px;
+    font-family:'Manrope'; font-weight:700; font-size:13px; color:var(--navy); cursor:pointer;
+  }
+  .boarding-pass{
+    margin-top:12px; background:var(--navy); color:#fff; border-radius:12px; padding:14px; font-size:12.5px;
+    display:none;
+  }
+  .boarding-pass.show{display:block;}
+  .boarding-pass .bp-row{display:flex; justify-content:space-between; margin-bottom:6px; color:#c9d0dd;}
+  .boarding-pass .bp-row b{color:#fff;}
+  .plus-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .plus-tile{background:var(--white); border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .plus-tile .ic{color:var(--terracotta); margin-bottom:8px;}
+  .plus-tile h4{font-size:13px; font-weight:700; color:var(--navy); margin:0 0 3px;}
+  .plus-tile p{font-size:11.5px; color:#6b6656; margin:0; line-height:1.35;}
+  .album-preview-card{
+    background:var(--white); border:1px solid var(--line); border-radius:16px; padding:14px;
+    margin-bottom:20px; cursor:pointer;
+  }
+  .album-preview-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .album-preview-top h4{font-size:14.5px; font-weight:700; color:var(--navy);}
+  .album-preview-top span{font-size:12px; color:#8a8470;}
+  .photo-strip{display:flex; gap:6px;}
+  .photo-swatch{flex:1; aspect-ratio:1; border-radius:8px;}
+  .sw1{background:linear-gradient(135deg,#C15B3C,#D9A544);}
+  .sw2{background:linear-gradient(135deg,#1C2B45,#2C4066);}
+  .sw3{background:linear-gradient(135deg,#6B7A56,#a9b98d);}
+  .sw4{background:linear-gradient(135deg,#D9A544,#f0d9a0);}
+  .sw5{background:linear-gradient(135deg,#8a5a3c,#C15B3C); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:800;}
+  .album-header{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .back-arrow{width:30px; height:30px; border-radius:50%; background:var(--white); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--navy);}
+  .sync-row{
+    display:flex; justify-content:space-between; align-items:center; background:var(--sand-dark);
+    border-radius:14px; padding:12px 14px; margin-bottom:16px;
+  }
+  .storage-card{
+    background:var(--white); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:16px;
+  }
+  .storage-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .storage-top span:first-child{font-size:12.5px; font-weight:700; color:var(--navy);}
+  .storage-top span:last-child{font-size:12px; color:#8a8470;}
+  .storage-track{height:8px; border-radius:6px; background:var(--sand-dark); overflow:hidden;}
+  .storage-fill{height:100%; border-radius:6px; background:linear-gradient(90deg, var(--terracotta), var(--gold));}
+  .storage-hint{font-size:11px; color:#8a8470; margin-top:8px;}
+  .owner-filter{display:flex; gap:8px; overflow-x:auto; margin-bottom:18px; padding-bottom:2px;}
+  .owner-filter::-webkit-scrollbar{display:none;}
+  .filter-pill{
+    flex-shrink:0; padding:7px 13px; border-radius:20px; font-size:12.5px; font-weight:700;
+    background:var(--white); border:1px solid var(--line); color:#6b6656; cursor:pointer;
+  }
+  .filter-pill.active{background:var(--terracotta); color:#fff; border-color:var(--terracotta);}
+  .sync-row .txt h4{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:2px;}
+  .sync-row .txt p{font-size:11.5px; color:#6b6656; margin:0; max-width:220px; line-height:1.35;}
+  .switch{width:42px; height:24px; border-radius:20px; background:#c9bd9c; position:relative; cursor:pointer; flex-shrink:0; transition:background .15s;}
+  .switch::after{content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .15s;}
+  .switch.on{background:var(--sage);}
+  .switch.on::after{left:21px;}
+  .album-section{margin-bottom:22px;}
+  .album-section .sec-title{display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:var(--navy); margin-bottom:10px;}
+  .album-section .sec-title svg{width:14px; height:14px; color:var(--terracotta);}
+  .album-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px;}
+  .photo-tile{aspect-ratio:1; border-radius:10px; position:relative; overflow:hidden;}
+  .photo-tile .pin{
+    position:absolute; bottom:5px; left:5px; background:rgba(28,43,69,0.55); color:#fff; font-size:9px;
+    padding:2px 6px; border-radius:8px; display:flex; align-items:center; gap:3px; backdrop-filter:blur(2px);
+  }
+  .photo-tile .pin svg{width:8px; height:8px;}
+  .fab{
+    position:absolute; right:22px; bottom:96px; width:52px; height:52px; border-radius:50%;
+    background:var(--terracotta); color:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 20px -8px rgba(161,74,46,0.6); cursor:pointer; z-index:8;
+  }
+  .fab-panel{
+    position:absolute; right:22px; bottom:156px; background:var(--navy); border-radius:14px; padding:10px;
+    display:none; flex-direction:column; gap:6px; z-index:8; width:200px;
+  }
+  .fab-panel.show{display:flex;}
+  .fab-panel button{
+    background:rgba(255,255,255,0.08); border:none; color:#fff; font-family:'Manrope'; font-size:12.5px;
+    font-weight:700; padding:10px; border-radius:9px; text-align:left; cursor:pointer;
+  }
+  .tabbar{
+    position:absolute; bottom:0; left:0; right:0;
+    background:rgba(244,235,218,0.92);
+    backdrop-filter:blur(6px);
+    border-top:1px solid var(--line);
+    display:flex; justify-content:space-around; padding:10px 6px 22px;
+  }
+  .tabbtn{
+    display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;
+    color:#9a927a; background:none; border:none; font-family:'Manrope'; font-size:10.5px; font-weight:700;
+  }
+  .tabbtn.active{color:var(--terracotta-dark);}
+  .tabbtn svg{width:22px; height:22px;}
+  .caption{
+    text-align:center; color:#5b5748; font-family:'Manrope'; font-size:13px; margin-top:22px; max-width:390px;
+  }
+</style>
+</head>
+<body>
+<div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span>My Companion</span></div>
+  <div class="screen active" id="screen-accueil">
+    <div class="trip-header">
+      <div>
+        <div class="eyebrow">Route 66 · Jour 6/18</div>
+        <h1>Bonjour Zoé &amp; Cécile</h1>
+      </div>
+    </div>
+    <div class="next-card">
+      <div class="label">Prochaine étape</div>
+      <h3>Cadillac Ranch</h3>
+      <div class="meta">Aujourd'hui à 14:30 · Amarillo, TX</div>
+    </div>
+    <div class="album-preview-card" onclick="showTab('album')">
+      <div class="album-preview-top"><h4>📸 Album du voyage</h4><span>127 photos</span></div>
+      <div class="photo-strip">
+        <div class="photo-swatch sw1"></div>
+        <div class="photo-swatch sw2"></div>
+        <div class="photo-swatch sw3"></div>
+        <div class="photo-swatch sw4"></div>
+        <div class="photo-swatch sw5">+123</div>
+      </div>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-tile" onclick="showTab('budget','conv')">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 8h13M7 8l3-3M7 8l3 3M17 16H4M17 16l-3-3M17 16l-3 3"/></svg>
+        <h4>Convertisseur</h4>
+        <p>Taux du jour EUR → USD</p>
+      </div>
+      <div class="tool-tile" onclick="showTab('budget','tips')">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        <h4>Taxes &amp; Tips</h4>
+        <p>Calcul selon votre satisfaction</p>
+      </div>
+      <div class="tool-tile" onclick="showTab('itineraire')">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+        <h4>Itinéraire</h4>
+        <p>Hôtels, activités, adresses</p>
+      </div>
+      <div class="tool-tile" onclick="showTab('vols')">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 16l20-7-7 20-3-8-8-3Z"/></svg>
+        <h4>Vols &amp; billets</h4>
+        <p>Aller, interne, retour</p>
+      </div>
+    </div>
+    <div class="alexia-card">
+      <div class="alexia-avatar">A</div>
+      <div>
+        <p>Comment se passe votre séjour ? Je suis à seulement un message si besoin 😉</p>
+        <button>Écrire à Alexia</button>
+      </div>
+    </div>
+  </div>
+  <div class="screen" id="screen-itineraire">
+    <div class="trip-header"><div><div class="eyebrow">Votre roadbook</div><h1>Itinéraire</h1></div></div>
+    <div class="day-pills" id="daypills"></div>
+    <div class="timeline">
+      <div class="titem">
+        <div class="time">09:00</div>
+        <div class="card">
+          <div class="row1">
+            <div><div class="type">Hôtel</div><h4>Route 66 Motel</h4></div>
+            <div class="maplink" title="Ouvrir dans Maps">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+            </div>
+          </div>
+          <div class="badges">
+            <span class="badge ok">Payé ✓</span>
+            <span class="badge info">Petit-déj inclus</span>
+            <span class="badge info">Parking inclus</span>
+          </div>
+        </div>
+      </div>
+      <div class="titem">
+        <div class="time">11:00</div>
+        <div class="card">
+          <div class="row1">
+            <div><div class="type">Activité</div><h4>Cadillac Ranch</h4></div>
+            <div class="maplink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg></div>
+          </div>
+          <div class="badges"><span class="badge ok">Gratuit</span></div>
+        </div>
+      </div>
+      <div class="titem">
+        <div class="time">13:00</div>
+        <div class="card">
+          <div class="row1">
+            <div><div class="type">Restaurant</div><h4>Big Texan Steak Ranch</h4></div>
+            <div class="maplink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg></div>
+          </div>
+          <div class="badges"><span class="badge due">À régler sur place</span></div>
+        </div>
+      </div>
+      <div class="titem">
+        <div class="time">19:00</div>
+        <div class="card">
+          <div class="row1">
+            <div><div class="type">Hôtel</div><h4>Wigwam Motel</h4></div>
+            <div class="maplink"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg></div>
+          </div>
+          <div class="badges">
+            <span class="badge ok">Payé ✓</span>
+            <span class="badge info">Parking inclus</span>
+            <span class="badge due">Petit-déj non inclus</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET -->
+  <div class="screen" id="screen-budget">
+    <div class="trip-header"><div><div class="eyebrow">Sur place</div><h1>Budget</h1></div></div>
+    <div class="subtabs">
+      <div class="subtab active" id="subtab-conv" onclick="showSub('conv')">Convertisseur</div>
+      <div class="subtab" id="subtab-tips" onclick="showSub('tips')">Taxes &amp; Tips</div>
+    </div>
+
+    <div id="sub-conv">
+      <div class="sign-panel">
+        <div class="sign-rate">1 € = <span id="rateShown">1,09</span> $</div>
+        <div class="sign-updated">Taux mis à jour aujourd'hui à 06:12</div>
+        <div class="convert-row">
+          <div class="convert-field"><label id="labelFrom">Euros</label><input type="number" id="eurInput" value="100" oninput="convert()"></div>
+          <div class="swap" onclick="swapConvert()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
+          </div>
+          <div class="convert-field"><label id="labelTo">Dollars</label><input type="number" id="usdInput" value="109" oninput="convertReverse()"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sub-tips" style="display:none;">
+      <div class="receipt">
+        <div class="field-row">
+          <label>Montant de l'addition ($)</label>
+          <input type="number" id="billAmount" value="60" oninput="computeTip()">
+        </div>
+        <div class="field-row">
+          <label>État (taxe locale)</label>
+          <select id="stateTax" onchange="computeTip()">
+            <option value="0.0825">Texas — 8,25 %</option>
+            <option value="0.08875">New York — 8,875 %</option>
+            <option value="0.0725">Californie — 7,25 %</option>
+            <option value="0.06">Floride — 6 %</option>
+            <option value="0">Autre / pas de taxe</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>Niveau de satisfaction</label>
+          <div class="satisfaction">
+            <div class="sat-opt" data-v="0.15" onclick="setSat(this)">Correct<br>15 %</div>
+            <div class="sat-opt active" data-v="0.18" onclick="setSat(this)">Bien<br>18 %</div>
+            <div class="sat-opt" data-v="0.20" onclick="setSat(this)">Excellent<br>20 %+</div>
+          </div>
+        </div>
+        <div class="receipt-total">
+          <div class="rt-row"><span>Addition</span><span id="rBill">$60.00</span></div>
+          <div class="rt-row"><span>Taxe locale</span><span id="rTax">$4.95</span></div>
+          <div class="rt-row"><span>Pourboire (18%)</span><span id="rTip">$10.80</span></div>
+          <div class="rt-row grand"><span>Total à payer</span><span id="rTotal">$75.75</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOLS -->
+  <div class="screen" id="screen-vols">
+    <div class="trip-header"><div><div class="eyebrow">Vos billets</div><h1>Vols</h1></div></div>
+
+    <div class="flight-card">
+      <div class="flight-top"><span class="flight-tag">ALLER · AF 022</span><span class="flight-status">À l'heure</span></div>
+      <div class="flight-route"><span class="city">CDG</span><div class="line"></div><span class="city">ORD</span></div>
+      <div class="flight-meta">Mer. 12 juin · 10:35 → 13:05 (heure locale)</div>
+      <button class="flight-btn" onclick="toggleBP('bp1')">Voir mon billet</button>
+      <div class="boarding-pass" id="bp1">
+        <div class="bp-row"><span>Passager</span><b>ZOE MARTIN</b></div>
+        <div class="bp-row"><span>Vol</span><b>AF 022</b></div>
+        <div class="bp-row"><span>Porte</span><b>C12</b></div>
+        <div class="bp-row"><span>Embarquement</span><b>09:55</b></div>
+        <div class="bp-row"><span>Siège</span><b>24A</b></div>
+      </div>
+    </div>
+
+    <div class="flight-card">
+      <div class="flight-top"><span class="flight-tag">VOL INTERNE · AA 1450</span><span class="flight-status">À l'heure</span></div>
+      <div class="flight-route"><span class="city">ORD</span><div class="line"></div><span class="city">AMA</span></div>
+      <div class="flight-meta">Sam. 15 juin · 08:10 → 09:45</div>
+      <button class="flight-btn" onclick="toggleBP('bp2')">Voir mon billet</button>
+      <div class="boarding-pass" id="bp2">
+        <div class="bp-row"><span>Passager</span><b>ZOE MARTIN</b></div>
+        <div class="bp-row"><span>Vol</span><b>AA 1450</b></div>
+        <div class="bp-row"><span>Porte</span><b>B4</b></div>
+        <div class="bp-row"><span>Embarquement</span><b>07:35</b></div>
+        <div class="bp-row"><span>Siège</span><b>14C</b></div>
+      </div>
+    </div>
+
+    <div class="flight-card">
+      <div class="flight-top"><span class="flight-tag">RETOUR · DL 265</span><span class="flight-status">À l'heure</span></div>
+      <div class="flight-route"><span class="city">LAX</span><div class="line"></div><span class="city">CDG</span></div>
+      <div class="flight-meta">Mar. 25 juin · 16:20 → 11:40 (+1)</div>
+      <button class="flight-btn" onclick="toggleBP('bp3')">Voir mon billet</button>
+      <div class="boarding-pass" id="bp3">
+        <div class="bp-row"><span>Passager</span><b>ZOE MARTIN</b></div>
+        <div class="bp-row"><span>Vol</span><b>DL 265</b></div>
+        <div class="bp-row"><span>Porte</span><b>Communiquée à J-1</b></div>
+        <div class="bp-row"><span>Siège</span><b>31D</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLUS -->
+  <div class="screen" id="screen-plus">
+    <div class="trip-header"><div><div class="eyebrow">Encore plus utile</div><h1>Bonus</h1></div></div>
+    <div class="plus-grid">
+      <div class="plus-tile" onclick="showTab('album')" style="cursor:pointer;">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 16l-5-5-9 9"/></svg>
+        <h4>Album photo</h4>
+        <p>Classé par jour et par lieu, dépôt manuel ou auto</p>
+      </div>
+      <div class="plus-tile">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M2 12h20"/></svg>
+        <h4>Urgences</h4>
+        <p>911, ambassade, assurance rapatriement en un tap</p>
+      </div>
+      <div class="plus-tile">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.6 8.6 0 0 1-3.9-1L3 20l1.1-5.2A8.4 8.4 0 1 1 21 11.5Z"/></svg>
+        <h4>Message à Alexia</h4>
+        <p>Chat direct avec votre interlocutrice unique</p>
+      </div>
+      <div class="plus-tile">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        <h4>Checklist documents</h4>
+        <p>ESTA, permis intl., assurance : suivi des justificatifs</p>
+      </div>
+      <div class="plus-tile">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <h4>Météo du jour</h4>
+        <p>Prévisions sur votre étape actuelle</p>
+      </div>
+      <div class="plus-tile">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M12 15l-4-4M12 15l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <h4>Roadbook hors-ligne</h4>
+        <p>Tout consulter sans réseau ni roaming</p>
+      </div>
+      <div class="plus-tile">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h4>Frais partagés</h4>
+        <p>Cagnotte de groupe pour un voyage à plusieurs</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALBUM -->
+  <div class="screen" id="screen-album">
+    <div class="album-header">
+      <div class="back-arrow" onclick="showTab('accueil')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Album du voyage</h1>
+    </div>
+
+    <div class="storage-card">
+      <div class="storage-top"><span>Espace utilisé</span><span>1.5 Go / 5 Go</span></div>
+      <div class="storage-track"><div class="storage-fill" style="width:30%;"></div></div>
+      <div class="storage-hint">Espace partagé du groupe · au-delà de 5 Go, les photos restent visibles en qualité réduite</div>
+    </div>
+
+    <div class="owner-filter">
+      <div class="filter-pill active" onclick="filterOwner(this,'all')">Tout le monde</div>
+      <div class="filter-pill" onclick="filterOwner(this,'zoe')">Zoé</div>
+      <div class="filter-pill" onclick="filterOwner(this,'cecile')">Cécile</div>
+      <div class="filter-pill" onclick="filterOwner(this,'alexia')">Alexia</div>
+    </div>
+
+    <div class="sync-row">
+      <div class="txt">
+        <h4>Synchronisation auto</h4>
+        <p>Importe les nouvelles photos de la pellicule prises pendant le séjour</p>
+      </div>
+      <div class="switch on" id="syncSwitch" onclick="toggleSwitch(this)"></div>
+    </div>
+
+    <div class="album-section">
+      <div class="sec-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+        Jour 4–6 · Amarillo, TX
+      </div>
+      <div class="album-grid">
+        <div class="photo-tile sw1" data-owner="zoe"><span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/></svg>15 juin</span></div>
+        <div class="photo-tile sw4" data-owner="cecile"></div>
+        <div class="photo-tile sw3" data-owner="zoe"></div>
+        <div class="photo-tile sw2" data-owner="alexia"></div>
+        <div class="photo-tile sw1" data-owner="cecile"></div>
+      </div>
+    </div>
+
+    <div class="album-section">
+      <div class="sec-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+        Jour 1–3 · Chicago, IL
+      </div>
+      <div class="album-grid">
+        <div class="photo-tile sw2" data-owner="cecile"><span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/></svg>12 juin</span></div>
+        <div class="photo-tile sw3" data-owner="zoe"></div>
+        <div class="photo-tile sw4" data-owner="zoe"></div>
+        <div class="photo-tile sw1" data-owner="alexia"></div>
+      </div>
+    </div>
+
+    <div class="fab-panel" id="fabPanel">
+      <button onclick="alert('Sélection depuis la galerie du téléphone')">📁 Depuis la galerie</button>
+      <button onclick="alert('Ouverture de l’appareil photo (géolocalisation activée)')">📷 Prendre une photo</button>
+    </div>
+    <div class="fab" onclick="document.getElementById('fabPanel').classList.toggle('show')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tabbtn active" id="nav-accueil" onclick="showTab('accueil')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Accueil
+    </button>
+    <button class="tabbtn" id="nav-itineraire" onclick="showTab('itineraire')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>Itinéraire
+    </button>
+    <button class="tabbtn" id="nav-budget" onclick="showTab('budget')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>Budget
+    </button>
+    <button class="tabbtn" id="nav-vols" onclick="showTab('vols')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 16l20-7-7 20-3-8-8-3Z"/></svg>Vols
+    </button>
+    <button class="tabbtn" id="nav-plus" onclick="showTab('plus')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>Plus
+    </button>
+  </div>
+</div>
+</div>
+
+<script>
+  const RATE = 1.09;
+
+  function showTab(name, sub){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('screen-'+name).classList.add('active');
+    const navBtn = document.getElementById('nav-'+name);
+    if(navBtn) navBtn.classList.add('active');
+    if(name==='budget' && sub) showSub(sub);
+  }
+
+  function showSub(which){
+    document.getElementById('subtab-conv').classList.toggle('active', which==='conv');
+    document.getElementById('subtab-tips').classList.toggle('active', which==='tips');
+    document.getElementById('sub-conv').style.display = which==='conv' ? 'block':'none';
+    document.getElementById('sub-tips').style.display = which==='tips' ? 'block':'none';
+  }
+
+  let direction = 'eur-usd';
+  function convert(){
+    const eur = parseFloat(document.getElementById('eurInput').value)||0;
+    document.getElementById('usdInput').value = (eur*RATE).toFixed(2);
+  }
+  function convertReverse(){
+    const usd = parseFloat(document.getElementById('usdInput').value)||0;
+    document.getElementById('eurInput').value = (usd/RATE).toFixed(2);
+  }
+  function swapConvert(){
+    const fromLabel = document.getElementById('labelFrom');
+    const toLabel = document.getElementById('labelTo');
+    const rateShown = document.getElementById('rateShown');
+    if(direction==='eur-usd'){
+      direction='usd-eur';
+      fromLabel.textContent='Dollars'; toLabel.textContent='Euros';
+      rateShown.textContent = (1/RATE).toFixed(2).replace('.',',');
+      document.querySelector('.sign-rate').innerHTML = '1 $ = <span id="rateShown">'+(1/RATE).toFixed(2).replace('.',',')+'</span> €';
+    } else {
+      direction='eur-usd';
+      fromLabel.textContent='Euros'; toLabel.textContent='Dollars';
+      document.querySelector('.sign-rate').innerHTML = '1 € = <span id="rateShown">1,09</span> $';
+    }
+  }
+
+  let satRate = 0.18;
+  function setSat(el){
+    document.querySelectorAll('.sat-opt').forEach(o=>o.classList.remove('active'));
+    el.classList.add('active');
+    satRate = parseFloat(el.dataset.v);
+    computeTip();
+  }
+
+  function computeTip(){
+    const bill = parseFloat(document.getElementById('billAmount').value)||0;
+    const taxRate = parseFloat(document.getElementById('stateTax').value)||0;
+    const tax = bill*taxRate;
+    const tip = bill*satRate;
+    const total = bill+tax+tip;
+    document.getElementById('rBill').textContent = '$'+bill.toFixed(2);
+    document.getElementById('rTax').textContent = '$'+tax.toFixed(2);
+    document.getElementById('rTip').textContent = '$'+tip.toFixed(2)+' ('+Math.round(satRate*100)+'%)';
+    document.getElementById('rTotal').textContent = '$'+total.toFixed(2);
+  }
+
+  function toggleBP(id){
+    document.getElementById(id).classList.toggle('show');
+  }
+
+  function toggleSwitch(el){
+    el.classList.toggle('on');
+  }
+
+  function filterOwner(el, owner){
+    document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.photo-tile').forEach(t=>{
+      t.style.display = (owner==='all' || t.dataset.owner===owner) ? '' : 'none';
+    });
+  }
+
+  // day pills
+  const days = Array.from({length:18},(_,i)=>i+1);
+  const pillsEl = document.getElementById('daypills');
+  days.forEach(d=>{
+    const p = document.createElement('div');
+    p.className = 'day-pill'+(d===6?' active':'');
+    p.textContent = 'J'+d;
+    p.onclick = ()=>{document.querySelectorAll('.day-pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');};
+    pillsEl.appendChild(p);
+  });
+
+  computeTip();
+  convert();
+</script>
+
+</body>
+</html>
