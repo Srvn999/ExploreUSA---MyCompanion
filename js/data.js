@@ -46,9 +46,15 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     .limit(1)
     .maybeSingle();
 
+  var expensesRes = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: false });
+
   var firstError =
     tripRes.error || daysRes.error || flightsRes.error || photosRes.error ||
-    travelersRes.error || documentsRes.error || rentalCarRes.error;
+    travelersRes.error || documentsRes.error || rentalCarRes.error || expensesRes.error;
   if (firstError) {
     console.warn(
       '[MyCompanion] Erreur Supabase, contenu de démo conservé.',
@@ -75,7 +81,27 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     travelers: travelersRes.data || [],
     documents: documentsRes.data || [],
     rentalCar: rentalCarRes.data || null,
+    expenses: expensesRes.data || [],
   };
+};
+
+window.MyCompanion.addExpense = async function (params) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase) throw new Error('Supabase non configuré');
+  var res = await supabase.from('expenses').insert({
+    trip_id: params.tripId,
+    description: params.description,
+    amount: params.amount,
+    paid_by: params.paidBy,
+  });
+  if (res.error) throw res.error;
+};
+
+window.MyCompanion.deleteExpense = async function (expenseId) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase) throw new Error('Supabase non configuré');
+  var res = await supabase.from('expenses').delete().eq('id', expenseId);
+  if (res.error) throw res.error;
 };
 
 // Taille réelle (en octets) de l'album photo d'un voyage : on liste le

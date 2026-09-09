@@ -75,6 +75,16 @@
   carte en haut de l'écran Documents). Table `rental_cars`, une par
   voyage pour l'instant
 
+### Frais partagés
+- ✅ Écran dédié : chaque dépense divisée à parts égales entre les
+  voyageurs (hors guide), solde par personne (à récupérer/à devoir),
+  ajout/suppression accessible à tout membre du voyage (petit groupe de
+  confiance, pas de restriction "ses propres dépenses uniquement")
+
+### e-SIM (à faire)
+- Petit guide pas-à-pas d'installation d'e-SIM, consultable hors-ligne
+  (se prête bien au service worker déjà en place)
+
 ### Météo du jour
 - ✅ Écran dédié, via Open-Meteo (gratuit, sans clé) : géocode le lieu de
   l'étape du jour puis récupère température actuelle + min/max. Aucun

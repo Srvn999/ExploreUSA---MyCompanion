@@ -22,6 +22,10 @@
       window.MyCompanion.renderRentalCar(bundle.rentalCar);
       window.MyCompanion.renderUrgences(bundle.trip, bundle.documents);
       window.MyCompanion.renderWeather(bundle.days);
+      window.MyCompanion.renderExpenses(bundle.expenses, bundle.travelers);
+      if (window.MyCompanion.initExpenses) {
+        window.MyCompanion.initExpenses(traveler.trip_id, function () { return loadTravelerTrip(traveler); });
+      }
       if (window.MyCompanion.initChat) window.MyCompanion.initChat(traveler.trip_id, traveler.id);
 
       window.MyCompanion.getTripPhotoStorageBytes(traveler.trip_id, bundle.travelers).then(function (bytes) {

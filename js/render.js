@@ -524,4 +524,82 @@ window.MyCompanion = window.MyCompanion || {};
       (weather.maxTemp != null ? '<span>Max <b>' + weather.maxTemp + '°</b></span>' : '') +
       '</div></div>';
   };
+
+  // ---- Frais partagés ----
+  // Répartition simple : chaque dépense est divisée à parts égales entre
+  // tous les voyageurs de rôle "member" (le guide ne participe pas à la cagnotte).
+  window.MyCompanion.renderExpenses = function (expenses, travelers) {
+    var summaryEl = document.getElementById('expensesSummary');
+    var listEl = document.getElementById('expensesList');
+    var payerSelect = document.getElementById('expensePaidBy');
+    if (!summaryEl || !listEl) return;
+
+    var members = (travelers || []).filter(function (t) { return t.role !== 'guide'; });
+
+    if (payerSelect) {
+      var previousValue = payerSelect.value;
+      payerSelect.innerHTML = members
+        .map(function (t) { return '<option value="' + t.id + '">' + escapeHtml(t.display_name) + '</option>'; })
+        .join('');
+      if (previousValue && members.some(function (t) { return t.id === previousValue; })) {
+        payerSelect.value = previousValue;
+      }
+    }
+
+    var totalsByTraveler = {};
+    members.forEach(function (t) { totalsByTraveler[t.id] = 0; });
+    var grandTotal = 0;
+    (expenses || []).forEach(function (e) {
+      grandTotal += Number(e.amount);
+      if (totalsByTraveler[e.paid_by] != null) totalsByTraveler[e.paid_by] += Number(e.amount);
+    });
+    var fairShare = members.length ? grandTotal / members.length : 0;
+
+    var balanceRows = members
+      .map(function (t) {
+        var paid = totalsByTraveler[t.id] || 0;
+        var balance = paid - fairShare;
+        var balanceClass = balance >= -0.01 ? 'pos' : 'neg';
+        var balanceLabel =
+          balance > 0.01 ? '+' + balance.toFixed(2) + ' € à récupérer' :
+          balance < -0.01 ? balance.toFixed(2) + ' € à devoir' : 'équilibré';
+        return (
+          '<div class="expense-balance-row">' +
+          '<div><div class="name">' + escapeHtml(t.display_name) + '</div>' +
+          '<div class="paid">' + paid.toFixed(2) + ' € payés</div></div>' +
+          '<div class="balance ' + balanceClass + '">' + balanceLabel + '</div>' +
+          '</div>'
+        );
+      })
+      .join('');
+
+    summaryEl.innerHTML =
+      '<div class="expense-total">' +
+      '<div class="et-amount">' + grandTotal.toFixed(2) + ' €</div>' +
+      '<div class="et-meta">' + (expenses || []).length + ' dépense(s) · part de chacun : ' + fairShare.toFixed(2) + ' € (' + members.length + ' pers.)</div>' +
+      '</div>' + balanceRows;
+
+    if (!expenses || !expenses.length) {
+      listEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune dépense pour l\'instant.</p>';
+      return;
+    }
+
+    var travelerById = {};
+    members.forEach(function (t) { travelerById[t.id] = t; });
+
+    listEl.innerHTML = expenses
+      .map(function (e) {
+        var payer = travelerById[e.paid_by];
+        var date = new Date(e.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        return (
+          '<div class="expense-row">' +
+          '<div><h4>' + escapeHtml(e.description) + '</h4>' +
+          '<div class="meta">' + (payer ? escapeHtml(payer.display_name) : '—') + ' · ' + date + '</div></div>' +
+          '<div><span class="amount">' + Number(e.amount).toFixed(2) + ' €</span>' +
+          '<button type="button" data-id="' + e.id + '" data-kind="delete-expense">✕</button></div>' +
+          '</div>'
+        );
+      })
+      .join('');
+  };
 })();
