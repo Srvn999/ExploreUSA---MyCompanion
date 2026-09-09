@@ -8,9 +8,11 @@
     try {
       var bundle = await window.MyCompanion.fetchTripBundle(traveler.trip_id);
       if (!bundle) return;
+      window.MyCompanion.renderHome(bundle.trip, traveler, bundle.days);
       window.MyCompanion.renderItinerary(bundle.days);
       window.MyCompanion.renderFlights(bundle.flights);
       window.MyCompanion.renderAlbum(bundle.days, bundle.photos, bundle.travelers);
+      window.MyCompanion.renderAlbumPreview(bundle.photos);
       if (window.MyCompanion.initChat) window.MyCompanion.initChat(traveler.trip_id, traveler.id);
     } catch (err) {
       console.warn('[MyCompanion] Chargement du voyage impossible.', err);

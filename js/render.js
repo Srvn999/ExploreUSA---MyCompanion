@@ -35,12 +35,82 @@ window.MyCompanion = window.MyCompanion || {};
     }
   }
 
+  // ---- Accueil (salutation + prochaine étape) ----
+  window.MyCompanion.renderHome = function (trip, traveler, days) {
+    var eyebrowEl = document.getElementById('homeEyebrow');
+    var greetingEl = document.getElementById('homeGreeting');
+    var nextCardEl = document.getElementById('nextCard');
+    var nextTitleEl = document.getElementById('nextCardTitle');
+    var nextMetaEl = document.getElementById('nextCardMeta');
+    var nextLabelEl = document.getElementById('nextCardLabel');
+    if (!eyebrowEl || !greetingEl || !nextCardEl) return;
+
+    eyebrowEl.textContent = trip ? (trip.name || trip.destination || 'Votre voyage') : 'Votre voyage';
+    greetingEl.textContent = 'Bonjour ' + (traveler && traveler.display_name ? traveler.display_name : '');
+
+    var upcoming = [];
+    (days || []).forEach(function (day) {
+      (day.itinerary_items || []).forEach(function (item) {
+        upcoming.push({ day: day, item: item });
+      });
+    });
+    upcoming.sort(function (a, b) {
+      var da = a.day.date || '';
+      var db = b.day.date || '';
+      if (da !== db) return da < db ? -1 : 1;
+      return (a.item.time || '').localeCompare(b.item.time || '');
+    });
+
+    var todayIso = new Date().toISOString().slice(0, 10);
+    var next = upcoming.find(function (u) { return !u.day.date || u.day.date >= todayIso; }) || upcoming[0];
+
+    if (!next) {
+      nextLabelEl.textContent = '';
+      nextTitleEl.textContent = "Aucune étape prévue pour l'instant";
+      nextMetaEl.textContent = '';
+      return;
+    }
+
+    nextLabelEl.textContent = 'Prochaine étape';
+    nextTitleEl.textContent = next.item.title;
+    nextMetaEl.textContent = [next.item.time, next.day.location_label].filter(Boolean).join(' · ');
+  };
+
+  // ---- Aperçu album (carte d'accueil) ----
+  window.MyCompanion.renderAlbumPreview = function (photos) {
+    var card = document.getElementById('albumPreviewCard');
+    var countEl = document.getElementById('albumPreviewCount');
+    var stripEl = document.getElementById('albumPreviewStrip');
+    if (!card || !countEl || !stripEl) return;
+
+    var list = photos || [];
+    if (!list.length) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = '';
+    countEl.textContent = list.length + (list.length > 1 ? ' photos' : ' photo');
+
+    var shown = list.slice(0, 5);
+    stripEl.innerHTML = shown
+      .map(function (p, i) {
+        var extra = i === 4 && list.length > 5 ? (list.length - 4) : null;
+        return '<div class="photo-swatch ' + SWATCH_CLASSES[i % SWATCH_CLASSES.length] + '">' + (extra ? '+' + extra : '') + '</div>';
+      })
+      .join('');
+  };
+
   // ---- Itinéraire (jours + timeline) ----
   window.MyCompanion.renderItinerary = function (days) {
-    if (!days || !days.length) return;
     var pillsEl = document.getElementById('daypills');
     var timelineEl = document.getElementById('itineraryTimeline');
     if (!pillsEl || !timelineEl) return;
+
+    if (!days || !days.length) {
+      pillsEl.innerHTML = '';
+      timelineEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune étape prévue pour l\'instant.</p>';
+      return;
+    }
 
     var sorted = days.slice().sort(function (a, b) {
       return a.day_number - b.day_number;
@@ -109,9 +179,13 @@ window.MyCompanion = window.MyCompanion || {};
 
   // ---- Vols ----
   window.MyCompanion.renderFlights = function (flights) {
-    if (!flights || !flights.length) return;
     var listEl = document.getElementById('flightsList');
     if (!listEl) return;
+
+    if (!flights || !flights.length) {
+      listEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucun vol renseigné pour l\'instant.</p>';
+      return;
+    }
 
     listEl.innerHTML = flights
       .map(function (f) {
@@ -143,9 +217,13 @@ window.MyCompanion = window.MyCompanion || {};
 
   // ---- Album photo ----
   window.MyCompanion.renderAlbum = function (days, photos, travelers) {
-    if (!days || !days.length) return;
     var sectionsEl = document.getElementById('albumSections');
     if (!sectionsEl) return;
+
+    if (!days || !days.length || !photos || !photos.length) {
+      sectionsEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune photo pour l\'instant.</p>';
+      return;
+    }
 
     var travelerById = {};
     (travelers || []).forEach(function (t) {
@@ -167,7 +245,10 @@ window.MyCompanion = window.MyCompanion || {};
         return (photosByDay[d.id] || []).length > 0;
       });
 
-    if (!sortedDays.length) return; // pas encore de photos : on garde l'exemple statique
+    if (!sortedDays.length) {
+      sectionsEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune photo pour l\'instant.</p>';
+      return;
+    }
 
     sectionsEl.innerHTML = sortedDays
       .map(function (day) {

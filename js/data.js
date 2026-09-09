@@ -7,6 +7,8 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
   var supabase = window.MyCompanion.client;
   if (!supabase || !tripId) return null;
 
+  var tripRes = await supabase.from('trips').select('*').eq('id', tripId).maybeSingle();
+
   var daysRes = await supabase
     .from('itinerary_days')
     .select('*, itinerary_items(*)')
@@ -31,7 +33,7 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     .eq('trip_id', tripId);
 
   var firstError =
-    daysRes.error || flightsRes.error || photosRes.error || travelersRes.error;
+    tripRes.error || daysRes.error || flightsRes.error || photosRes.error || travelersRes.error;
   if (firstError) {
     console.warn(
       '[MyCompanion] Erreur Supabase, contenu de démo conservé.',
@@ -51,6 +53,7 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
   });
 
   return {
+    trip: tripRes.data || null,
     days: days,
     flights: flightsRes.data || [],
     photos: photosRes.data || [],
