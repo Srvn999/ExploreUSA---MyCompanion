@@ -664,6 +664,22 @@ window.MyCompanion = window.MyCompanion || {};
       .join('');
   };
 
+  // Reconnaît un État soit via un code à 2 lettres en fin de texte
+  // ("Chicago, IL"), soit via le nom complet écrit n'importe où
+  // ("Chicago, Illinois" ou juste "Illinois").
+  function matchUsState(label) {
+    var suffixMatch = /,\s*([A-Za-z]{2})\s*$/.exec(label || '');
+    if (suffixMatch) {
+      var code = suffixMatch[1].toUpperCase();
+      if (US_STATE_TAX[code]) return code;
+    }
+    var lower = (label || '').toLowerCase();
+    for (var c in US_STATE_TAX) {
+      if (US_STATE_TAX[c][0] && lower.indexOf(US_STATE_TAX[c][0].toLowerCase()) !== -1) return c;
+    }
+    return null;
+  }
+
   // ---- Liste des États pour le calculateur de taxes ----
   // Ne montre que les États réellement traversés pendant ce voyage
   // (déduits du lieu de chaque étape, ex. "Amarillo, TX" -> TX).
@@ -673,12 +689,17 @@ window.MyCompanion = window.MyCompanion || {};
 
     var codes = [];
     (days || []).forEach(function (d) {
-      var match = /,\s*([A-Za-z]{2})\s*$/.exec(d.location_label || '');
-      var code = match ? match[1].toUpperCase() : null;
-      if (code && US_STATE_TAX[code] && codes.indexOf(code) === -1) codes.push(code);
+      var code = matchUsState(d.location_label);
+      if (code && codes.indexOf(code) === -1) codes.push(code);
     });
 
-    if (!codes.length) return; // pas d'État identifié : on garde la liste par défaut
+    if (!codes.length) {
+      // Pas d'État identifiable dans les lieux renseignés : on ne propose
+      // plus une liste figée qui n'a rien à voir avec le voyage.
+      selectEl.innerHTML = '<option value="0">Autre / pas de taxe</option>';
+      if (window.computeTip) window.computeTip();
+      return;
+    }
 
     codes.sort(function (a, b) { return US_STATE_TAX[a][0].localeCompare(US_STATE_TAX[b][0]); });
 
