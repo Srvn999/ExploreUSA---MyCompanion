@@ -31,6 +31,12 @@
   PKCE). Si des voyageurs se plaignent que le lien reçu sur leur téléphone
   ne marche pas après une demande faite depuis l'admin, il faudra ajuster
   ce réglage dans Supabase (Authentication → Settings)
+- **Avant d'inviter de vrais clients** : configurer un vrai fournisseur
+  d'email (Resend, Postmark, Brevo...) dans Supabase → Authentication →
+  Settings → SMTP Settings. L'envoi par défaut de Supabase est limité à
+  quelques emails/heure (prévu pour les tests, pas pour la production) —
+  sans ça, les invitations échoueront avec "email rate limit exceeded"
+  dès qu'il y a plusieurs voyageurs à inviter le même jour
 
 ### Appli installable (PWA)
 - Ajouter un logo/icône de l'appli
