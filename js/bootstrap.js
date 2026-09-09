@@ -7,7 +7,12 @@
   async function loadTravelerTrip(traveler) {
     try {
       var bundle = await window.MyCompanion.fetchTripBundle(traveler.trip_id);
-      if (!bundle) return;
+      if (!bundle) {
+        if (window.MyCompanion.showAuthGate) {
+          window.MyCompanion.showAuthGate('Impossible de charger votre voyage pour le moment. Réessayez plus tard.');
+        }
+        return;
+      }
       window.MyCompanion.renderHome(bundle.trip, traveler, bundle.days);
       window.MyCompanion.renderItinerary(bundle.days);
       window.MyCompanion.renderFlights(bundle.flights);
@@ -25,8 +30,13 @@
           return loadTravelerTrip(traveler);
         });
       }
+
+      if (window.MyCompanion.hideAuthGate) window.MyCompanion.hideAuthGate();
     } catch (err) {
       console.warn('[MyCompanion] Chargement du voyage impossible.', err);
+      if (window.MyCompanion.showAuthGate) {
+        window.MyCompanion.showAuthGate('Impossible de charger votre voyage pour le moment. Réessayez plus tard.');
+      }
     }
   }
 

@@ -3,6 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>My Companion - ExploreUSA</title>
+<!--
+  Connexion Supabase (optionnelle) : renseignez les 3 valeurs ci-dessous
+  pour remplacer le contenu de démo par les vraies données du voyage.
+  Voir SETUP.md pour la procédure complète. Tant que supabaseUrl est vide,
+  le prototype reste 100% statique, exactement comme avant.
+  Placé tout en haut du document pour être disponible avant le premier
+  rendu (voir le script juste après #authGate, plus bas).
+-->
+<script>
+  window.MYCOMPANION_CONFIG = {
+    supabaseUrl: "https://vwiqpmcshwdtwgtnqduf.supabase.co",
+    supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aXFwbWNzaHdkdHdndG5xZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTkwMTcsImV4cCI6MjEwNDQ3NTAxN30.eURwHlonJDZHP8xIYoA-zzRR_KXXD7IVntEDOLlXHoU",
+    tripId: "00000000-0000-0000-0000-000000000001"
+  };
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1C2B45">
@@ -411,6 +426,14 @@
     </form>
     <p id="authMessage"></p>
   </div>
+  <script>
+    // Affiché tout de suite, avant même que le reste du JS ne se charge :
+    // évite d'entrevoir une fraction de seconde le voyage d'un autre
+    // utilisateur pendant que la session/les données se chargent.
+    if (window.MYCOMPANION_CONFIG && window.MYCOMPANION_CONFIG.supabaseUrl) {
+      document.getElementById('authGate').style.display = 'flex';
+    }
+  </script>
 
   <div class="screen active" id="screen-accueil">
     <div class="trip-header">
@@ -437,7 +460,7 @@
     <div class="tools-grid">
       <div class="tool-tile" onclick="showTab('budget','conv')">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 8h13M7 8l3-3M7 8l3 3M17 16H4M17 16l-3-3M17 16l-3 3"/></svg>
-        <h4>Convertisseur</h4>
+        <h4>Convertisseur €/$</h4>
         <p>Taux du jour EUR → USD</p>
       </div>
       <div class="tool-tile" onclick="showTab('budget','tips')">
@@ -525,7 +548,7 @@
   <div class="screen" id="screen-budget">
     <div class="trip-header"><div><div class="eyebrow">Sur place</div><h1>Outils</h1></div></div>
     <div class="subtabs">
-      <div class="subtab active" id="subtab-conv" onclick="showSub('conv')">Convertisseur</div>
+      <div class="subtab active" id="subtab-conv" onclick="showSub('conv')">Convertisseur €/$</div>
       <div class="subtab" id="subtab-tips" onclick="showSub('tips')">Taxes &amp; Tips</div>
     </div>
 
@@ -881,19 +904,6 @@
   convert();
 </script>
 
-<!--
-  Connexion Supabase (optionnelle) : renseignez les 3 valeurs ci-dessous
-  pour remplacer le contenu de démo par les vraies données du voyage.
-  Voir SETUP.md pour la procédure complète. Tant que supabaseUrl est vide,
-  le prototype reste 100% statique, exactement comme avant.
--->
-<script>
-  window.MYCOMPANION_CONFIG = {
-    supabaseUrl: "https://vwiqpmcshwdtwgtnqduf.supabase.co",
-    supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aXFwbWNzaHdkdHdndG5xZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTkwMTcsImV4cCI6MjEwNDQ3NTAxN30.eURwHlonJDZHP8xIYoA-zzRR_KXXD7IVntEDOLlXHoU",
-    tripId: "00000000-0000-0000-0000-000000000001"
-  };
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/auth.js"></script>

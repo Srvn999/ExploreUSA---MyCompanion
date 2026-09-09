@@ -39,6 +39,12 @@ window.MyCompanion = window.MyCompanion || {};
     return resolvedTraveler;
   };
 
+  // À appeler par le code appelant une fois le voyage réellement chargé
+  // et affiché — pas avant, pour ne jamais laisser entrevoir le contenu
+  // de démo pendant le chargement.
+  window.MyCompanion.hideAuthGate = hideGate;
+  window.MyCompanion.showAuthGate = showGate;
+
   window.MyCompanion.signOut = async function () {
     var supabase = window.MyCompanion.client;
     if (supabase) await supabase.auth.signOut();
@@ -93,7 +99,9 @@ window.MyCompanion = window.MyCompanion || {};
       }
 
       resolvedTraveler = traveler;
-      hideGate();
+      // On NE masque PAS l'écran de connexion ici : il reste affiché
+      // (couvrant le contenu de démo) jusqu'à ce que le voyage soit
+      // vraiment chargé et affiché — voir hideAuthGate() dans bootstrap.js.
       onReady(traveler);
     }
 
