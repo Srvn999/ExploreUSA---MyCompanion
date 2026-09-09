@@ -226,6 +226,20 @@ window.MyCompanion = window.MyCompanion || {};
     var sectionsEl = document.getElementById('albumSections');
     if (!sectionsEl) return;
 
+    var filterEl = document.getElementById('ownerFilter');
+    if (filterEl) {
+      filterEl.innerHTML =
+        '<div class="filter-pill active" onclick="filterOwner(this,\'all\')">Tout le monde</div>' +
+        (travelers || [])
+          .map(function (t) {
+            return (
+              '<div class="filter-pill" onclick="filterOwner(this,\'' + t.owner_slug + '\')">' +
+              escapeHtml(t.display_name) + '</div>'
+            );
+          })
+          .join('');
+    }
+
     if (!days || !days.length || !photos || !photos.length) {
       sectionsEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune photo pour l\'instant.</p>';
       return;

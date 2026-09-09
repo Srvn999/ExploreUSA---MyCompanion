@@ -373,6 +373,27 @@
   }
   .doc-card h4{ font-size:13.5px; font-weight:700; color:var(--navy); margin:0 0 2px; }
   .doc-card p{ font-size:11.5px; color:#8a8470; margin:0; }
+  .back-toast{
+    position:absolute; left:50%; bottom:100px; transform:translateX(-50%) translateY(10px);
+    background:var(--navy); color:#fff; font-family:'Manrope'; font-size:12.5px; font-weight:700;
+    padding:10px 18px; border-radius:20px; white-space:nowrap; z-index:40;
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  }
+  .back-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* Une fois installée sur l'écran d'accueil : on retire le cadre "téléphone
+     factice" (bordure, coins arrondis, encoche, fausse barre de statut) —
+     le vrai téléphone a déjà tout ça. On garde ce cadre uniquement pour la
+     prévisualisation dans un navigateur desktop. */
+  @media (display-mode: standalone) {
+    body{ padding:0; align-items:stretch; justify-content:stretch; background:var(--sand); }
+    .phone{
+      width:100vw; height:100vh; height:100dvh; border:none; border-radius:0; box-shadow:none;
+    }
+    .notch{ display:none; }
+    .statusbar{ display:none; }
+    .authgate{ top:0; }
+  }
 </style>
 </head>
 <body>
@@ -662,7 +683,7 @@
       <div class="storage-hint">Espace partagé du groupe · au-delà de 5 Go, les photos restent visibles en qualité réduite</div>
     </div>
 
-    <div class="owner-filter">
+    <div class="owner-filter" id="ownerFilter">
       <div class="filter-pill active" onclick="filterOwner(this,'all')">Tout le monde</div>
       <div class="filter-pill" onclick="filterOwner(this,'zoe')">Zoé</div>
       <div class="filter-pill" onclick="filterOwner(this,'cecile')">Cécile</div>
@@ -758,6 +779,8 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>Plus
     </button>
   </div>
+
+  <div class="back-toast" id="backToast">Appuyez de nouveau sur retour pour quitter</div>
 </div>
 </div>
 
@@ -876,6 +899,7 @@
 <script src="js/render.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/bootstrap.js"></script>
+<script src="js/backGuard.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {

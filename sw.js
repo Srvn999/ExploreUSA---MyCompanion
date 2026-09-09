@@ -2,7 +2,7 @@
 // l'écran d'accueil") et permet à l'appli de se recharger même avec une
 // connexion faible. Ne met jamais en cache les appels vers Supabase
 // (autre origine) : seul le "coquillage" de l'appli est concerné.
-const CACHE_NAME = 'my-companion-v1';
+const CACHE_NAME = 'my-companion-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const APP_SHELL = [
   './js/render.js',
   './js/chat.js',
   './js/bootstrap.js',
+  './js/backGuard.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];
