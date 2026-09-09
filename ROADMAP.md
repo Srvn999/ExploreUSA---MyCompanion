@@ -75,6 +75,11 @@
   carte en haut de l'écran Documents). Table `rental_cars`, une par
   voyage pour l'instant
 
+### Météo du jour
+- ✅ Écran dédié, via Open-Meteo (gratuit, sans clé) : géocode le lieu de
+  l'étape du jour puis récupère température actuelle + min/max. Aucun
+  compte ni configuration à faire côté Supabase pour celle-ci
+
 ### Urgences
 - ✅ Écran dédié : 911 (universel), ambassade et assurance/rapatriement
   saisis par Alexia (onglet Infos de l'admin — volontairement vide par

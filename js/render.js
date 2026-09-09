@@ -9,6 +9,18 @@ window.MyCompanion = window.MyCompanion || {};
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg>';
   var PHOTO_PIN_ICON =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/></svg>';
+  var WEATHER_CODES = {
+    0: ['☀️', 'Ciel clair'], 1: ['🌤️', 'Plutôt clair'], 2: ['⛅', 'Partiellement nuageux'], 3: ['☁️', 'Couvert'],
+    45: ['🌫️', 'Brouillard'], 48: ['🌫️', 'Brouillard givrant'],
+    51: ['🌦️', 'Bruine légère'], 53: ['🌦️', 'Bruine'], 55: ['🌦️', 'Bruine forte'],
+    56: ['🌧️', 'Bruine verglaçante'], 57: ['🌧️', 'Bruine verglaçante forte'],
+    61: ['🌧️', 'Pluie légère'], 63: ['🌧️', 'Pluie'], 65: ['🌧️', 'Pluie forte'],
+    66: ['🌧️', 'Pluie verglaçante'], 67: ['🌧️', 'Pluie verglaçante forte'],
+    71: ['🌨️', 'Neige légère'], 73: ['🌨️', 'Neige'], 75: ['❄️', 'Neige forte'], 77: ['❄️', 'Grains de neige'],
+    80: ['🌦️', 'Averses légères'], 81: ['🌧️', 'Averses'], 82: ['⛈️', 'Averses violentes'],
+    85: ['🌨️', 'Averses de neige'], 86: ['❄️', 'Averses de neige fortes'],
+    95: ['⛈️', 'Orage'], 96: ['⛈️', 'Orage avec grêle'], 99: ['⛈️', 'Orage avec grêle fort'],
+  };
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
   var SWATCH_CLASSES = ['sw1', 'sw2', 'sw3', 'sw4', 'sw5'];
   var CATEGORY_LABELS = {
@@ -469,5 +481,47 @@ window.MyCompanion = window.MyCompanion || {};
         });
       });
     }
+  };
+
+  // ---- Météo (étape du jour) ----
+  window.MyCompanion.renderWeather = async function (days) {
+    var cardEl = document.getElementById('weatherCard');
+    if (!cardEl) return;
+
+    var todayIso = new Date().toISOString().slice(0, 10);
+    var sorted = (days || [])
+      .filter(function (d) { return d.location_label; })
+      .sort(function (a, b) { return a.day_number - b.day_number; });
+    var target =
+      sorted.find(function (d) { return d.date === todayIso; }) ||
+      sorted.find(function (d) { return !d.date || d.date >= todayIso; }) ||
+      sorted[0];
+
+    if (!target) {
+      cardEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune étape avec un lieu renseigné pour l\'instant.</p>';
+      return;
+    }
+
+    cardEl.innerHTML = '<div class="weather-card"><div class="wc-place">Chargement...</div></div>';
+
+    var weather = await window.MyCompanion.getWeatherForLocation(target.location_label);
+    if (!weather) {
+      cardEl.innerHTML =
+        '<p style="color:#8a8470;font-size:13px;">Météo indisponible pour "' +
+        escapeHtml(target.location_label) + '" pour le moment.</p>';
+      return;
+    }
+
+    var codeInfo = WEATHER_CODES[weather.weatherCode] || ['🌡️', 'Météo'];
+    cardEl.innerHTML =
+      '<div class="weather-card">' +
+      '<div class="wc-place">' + escapeHtml(weather.place) + '</div>' +
+      '<div class="wc-icon">' + codeInfo[0] + '</div>' +
+      (weather.currentTemp != null ? '<div class="wc-temp">' + weather.currentTemp + '°</div>' : '') +
+      '<div class="wc-desc">' + codeInfo[1] + '</div>' +
+      '<div class="wc-minmax">' +
+      (weather.minTemp != null ? '<span>Min <b>' + weather.minTemp + '°</b></span>' : '') +
+      (weather.maxTemp != null ? '<span>Max <b>' + weather.maxTemp + '°</b></span>' : '') +
+      '</div></div>';
   };
 })();

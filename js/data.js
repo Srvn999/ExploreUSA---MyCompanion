@@ -97,6 +97,41 @@ window.MyCompanion.getTripPhotoStorageBytes = async function (tripId, travelers)
   return total;
 };
 
+// Météo du lieu de l'étape du jour, via Open-Meteo (gratuit, sans clé).
+// Deux appels : géocodage du nom de lieu -> coordonnées, puis prévisions.
+window.MyCompanion.getWeatherForLocation = async function (locationLabel) {
+  if (!locationLabel) return null;
+  try {
+    var geoRes = await fetch(
+      'https://geocoding-api.open-meteo.com/v1/search?name=' +
+        encodeURIComponent(locationLabel) + '&count=1&language=fr&format=json'
+    );
+    var geo = await geoRes.json();
+    var place = geo.results && geo.results[0];
+    if (!place) return null;
+
+    var forecastRes = await fetch(
+      'https://api.open-meteo.com/v1/forecast?latitude=' + place.latitude +
+        '&longitude=' + place.longitude +
+        '&current=temperature_2m,weather_code' +
+        '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
+        '&forecast_days=1&timezone=auto'
+    );
+    var forecast = await forecastRes.json();
+
+    return {
+      place: place.name + (place.admin1 ? ', ' + place.admin1 : ''),
+      currentTemp: forecast.current ? Math.round(forecast.current.temperature_2m) : null,
+      weatherCode: forecast.current ? forecast.current.weather_code : null,
+      maxTemp: forecast.daily ? Math.round(forecast.daily.temperature_2m_max[0]) : null,
+      minTemp: forecast.daily ? Math.round(forecast.daily.temperature_2m_min[0]) : null,
+    };
+  } catch (err) {
+    console.warn('[MyCompanion] Météo indisponible', err);
+    return null;
+  }
+};
+
 // Bucket 'trip-documents' privé -> URL signée à l'ouverture.
 window.MyCompanion.getDocumentSignedUrl = async function (storagePath) {
   var supabase = window.MyCompanion.client;
