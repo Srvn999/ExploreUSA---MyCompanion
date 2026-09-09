@@ -39,6 +39,19 @@ window.MyCompanion = window.MyCompanion || {};
     VT: ['Vermont', 0.0624], VA: ['Virginie', 0.0575], WA: ['Washington', 0.0886], WV: ['Virginie-Occidentale', 0.065],
     WI: ['Wisconsin', 0.0543], WY: ['Wyoming', 0.0536], DC: ['Washington D.C.', 0.06],
   };
+  // Noms anglais (pour matcher la réponse de l'API de géolocalisation,
+  // qui renvoie souvent les États américains en anglais même en français).
+  var US_STATE_NAMES_EN = {
+    AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado',
+    CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho',
+    IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana',
+    ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
+    MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey',
+    NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma',
+    OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota',
+    TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington',
+    WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming', DC: 'District of Columbia',
+  };
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
   var SWATCH_CLASSES = ['sw1', 'sw2', 'sw3', 'sw4', 'sw5'];
   var CATEGORY_LABELS = {
@@ -701,18 +714,56 @@ window.MyCompanion = window.MyCompanion || {};
     return null;
   }
 
+  // Repli quand le texte seul ne suffit pas (ex. juste "Chicago", sans
+  // État) : on géolocalise le lieu (même service que la météo) et on lit
+  // la région ("admin1", ex. "Illinois") renvoyée.
+  async function resolveStateViaGeocoding(label, cache) {
+    if (Object.prototype.hasOwnProperty.call(cache, label)) return cache[label];
+    try {
+      var res = await fetch(
+        'https://geocoding-api.open-meteo.com/v1/search?name=' +
+          encodeURIComponent(label) + '&count=1&language=fr&format=json&country=US'
+      );
+      var geo = await res.json();
+      var place = geo.results && geo.results[0];
+      var admin1 = place && place.admin1 ? place.admin1.toLowerCase() : null;
+      var code = null;
+      if (admin1) {
+        for (var c in US_STATE_TAX) {
+          if (
+            (US_STATE_TAX[c][0] && US_STATE_TAX[c][0].toLowerCase() === admin1) ||
+            (US_STATE_NAMES_EN[c] && US_STATE_NAMES_EN[c].toLowerCase() === admin1)
+          ) {
+            code = c;
+            break;
+          }
+        }
+      }
+      cache[label] = code;
+      return code;
+    } catch (err) {
+      cache[label] = null;
+      return null;
+    }
+  }
+
   // ---- Liste des États pour le calculateur de taxes ----
   // Ne montre que les États réellement traversés pendant ce voyage
-  // (déduits du lieu de chaque étape, ex. "Amarillo, TX" -> TX).
-  window.MyCompanion.renderStateTaxOptions = function (days) {
+  // (déduits du lieu de chaque étape, ex. "Amarillo, TX" -> TX, ou juste
+  // "Chicago" via géolocalisation).
+  window.MyCompanion.renderStateTaxOptions = async function (days) {
     var selectEl = document.getElementById('stateTax');
     if (!selectEl) return;
 
     var codes = [];
-    (days || []).forEach(function (d) {
-      var code = matchUsState(d.location_label);
+    var geocodeCache = {};
+    var withLocation = (days || []).filter(function (d) { return d.location_label; });
+
+    for (var i = 0; i < withLocation.length; i++) {
+      var label = withLocation[i].location_label;
+      var code = matchUsState(label) || (await resolveStateViaGeocoding(label, geocodeCache));
       if (code && codes.indexOf(code) === -1) codes.push(code);
-    });
+    }
 
     if (!codes.length) {
       // Pas d'État identifiable dans les lieux renseignés : on ne propose
