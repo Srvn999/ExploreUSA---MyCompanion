@@ -426,6 +426,18 @@
   .weather-card .wc-desc{ font-size:14px; color:#c9d0dd; margin-bottom:16px; text-transform:capitalize; }
   .weather-card .wc-minmax{ display:flex; justify-content:center; gap:24px; font-size:13px; color:#c9d0dd; }
   .weather-card .wc-minmax b{ color:#fff; }
+  .weather-day-row{
+    display:flex; justify-content:space-between; align-items:center; background:var(--white);
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:8px;
+  }
+  .weather-day-row.today{ border-color:var(--terracotta); border-width:1.5px; }
+  .weather-day-row.past{ opacity:.6; }
+  .weather-day-row .wd-left{ display:flex; align-items:center; gap:12px; }
+  .weather-day-row .wd-icon{ font-size:24px; width:30px; text-align:center; }
+  .weather-day-row h4{ font-size:13px; font-weight:700; color:var(--navy); margin:0 0 2px; }
+  .weather-day-row p{ font-size:11.5px; color:#8a8470; margin:0; }
+  .weather-day-row .wd-temps{ font-size:13px; color:var(--navy); font-weight:700; text-align:right; white-space:nowrap; }
+  .weather-day-row .wd-temps span{ color:#8a8470; font-weight:400; font-size:11.5px; }
   #expensesSummary{ margin-bottom:16px; }
   .expense-total{
     background:var(--navy); color:#fff; border-radius:16px; padding:16px 18px; margin-bottom:12px;
@@ -449,6 +461,13 @@
   #expenseForm button{
     background:var(--terracotta); color:#fff; border:none; padding:10px 16px; border-radius:10px;
     font-family:'Manrope'; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  #addCompanionForm input, #addCompanionForm button{
+    padding:10px 12px; border-radius:10px; font-family:'Manrope'; font-size:13.5px;
+  }
+  #addCompanionForm input{ flex:1; border:1px solid var(--line); }
+  #addCompanionForm button{
+    background:var(--navy); color:#fff; border:none; font-weight:700; cursor:pointer;
   }
   .expense-row{
     display:flex; justify-content:space-between; align-items:center; background:var(--white);
@@ -898,7 +917,12 @@
       </div>
       <h1 style="font-size:20px;">Météo</h1>
     </div>
-    <div id="weatherCard"></div>
+    <form class="inline" id="weatherSearchForm" style="gap:8px; margin-bottom:12px;">
+      <input type="text" id="weatherSearchInput" placeholder="Rechercher un lieu..." style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line); font-family:'Manrope'; font-size:13.5px;">
+      <button type="submit" style="background:var(--navy); color:#fff; border:none; padding:10px 16px; border-radius:10px; font-family:'Manrope'; font-weight:700; font-size:13px; cursor:pointer;">Rechercher</button>
+    </form>
+    <div id="weatherSearchResult"></div>
+    <div id="weatherDaysList"></div>
   </div>
 
   <!-- FRAIS PARTAGES -->
@@ -910,6 +934,11 @@
       <h1 style="font-size:20px;">Frais partagés</h1>
     </div>
     <div id="expensesSummary"></div>
+    <p id="addCompanionLink" style="font-size:12.5px; color:var(--terracotta-dark); font-weight:700; cursor:pointer; text-decoration:underline; margin:0 0 10px;">+ Ajouter une personne (sans l'appli)</p>
+    <form class="inline" id="addCompanionForm" style="display:none; gap:8px; margin-bottom:14px;">
+      <input type="text" id="companionName" placeholder="Prénom">
+      <button type="submit">Ajouter</button>
+    </form>
     <form class="inline" id="expenseForm">
       <input type="text" id="expenseDescription" placeholder="Description" required>
       <input type="number" id="expenseAmount" placeholder="Montant €" min="0.01" step="0.01" required>

@@ -98,6 +98,26 @@ window.MyCompanion.fetchEsimGuides = async function () {
   return res.data || [];
 };
 
+// Ajoute un "compagnon de route" au voyage : juste un prénom, sans email
+// ni compte, pour pouvoir lui attribuer des dépenses dans la cagnotte.
+window.MyCompanion.addCompanionTraveler = async function (tripId, displayName) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase) throw new Error('Supabase non configuré');
+  var slug =
+    displayName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '') + '-' + Date.now().toString(36);
+  var res = await supabase.from('travelers').insert({
+    trip_id: tripId,
+    display_name: displayName,
+    owner_slug: slug,
+    role: 'member',
+  });
+  if (res.error) throw res.error;
+};
+
 window.MyCompanion.addExpense = async function (params) {
   var supabase = window.MyCompanion.client;
   if (!supabase) throw new Error('Supabase non configuré');
@@ -167,6 +187,46 @@ window.MyCompanion.getWeatherForLocation = async function (locationLabel) {
     };
   } catch (err) {
     console.warn('[MyCompanion] Météo indisponible', err);
+    return null;
+  }
+};
+
+// Météo (min/max du jour) pour une date précise à un endroit donné —
+// utilisé pour afficher toutes les étapes du voyage (passées incluses,
+// jusqu'à ~92 jours en arrière, et à venir jusqu'à ~16 jours). Un cache de
+// géocodage optionnel évite de re-géocoder deux étapes au même endroit.
+window.MyCompanion.getWeatherForDate = async function (locationLabel, dateStr, geocodeCache) {
+  if (!locationLabel) return null;
+  try {
+    var coords = geocodeCache && geocodeCache[locationLabel];
+    if (!coords) {
+      var geoRes = await fetch(
+        'https://geocoding-api.open-meteo.com/v1/search?name=' +
+          encodeURIComponent(locationLabel) + '&count=1&language=fr&format=json'
+      );
+      var geo = await geoRes.json();
+      var place = geo.results && geo.results[0];
+      if (!place) return null;
+      coords = { lat: place.latitude, lon: place.longitude, name: place.name + (place.admin1 ? ', ' + place.admin1 : '') };
+      if (geocodeCache) geocodeCache[locationLabel] = coords;
+    }
+
+    var params = 'latitude=' + coords.lat + '&longitude=' + coords.lon +
+      '&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto';
+    params += dateStr ? '&start_date=' + dateStr + '&end_date=' + dateStr : '&forecast_days=1';
+
+    var forecastRes = await fetch('https://api.open-meteo.com/v1/forecast?' + params);
+    var forecast = await forecastRes.json();
+    if (!forecast.daily || !forecast.daily.time || !forecast.daily.time.length) return null;
+
+    return {
+      place: coords.name,
+      maxTemp: Math.round(forecast.daily.temperature_2m_max[0]),
+      minTemp: Math.round(forecast.daily.temperature_2m_min[0]),
+      weatherCode: forecast.daily.weather_code[0],
+    };
+  } catch (err) {
+    console.warn('[MyCompanion] Météo indisponible pour cette date', err);
     return null;
   }
 };

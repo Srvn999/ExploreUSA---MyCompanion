@@ -501,37 +501,69 @@ window.MyCompanion = window.MyCompanion || {};
     }
   };
 
-  // ---- Météo (étape du jour) ----
-  window.MyCompanion.renderWeather = async function (days) {
-    var cardEl = document.getElementById('weatherCard');
-    if (!cardEl) return;
+  // ---- Météo : toutes les étapes du voyage (passées, en cours, à venir) ----
+  window.MyCompanion.renderWeatherDays = async function (days) {
+    var listEl = document.getElementById('weatherDaysList');
+    if (!listEl) return;
 
     var todayIso = new Date().toISOString().slice(0, 10);
     var sorted = (days || [])
       .filter(function (d) { return d.location_label; })
       .sort(function (a, b) { return a.day_number - b.day_number; });
-    var target =
-      sorted.find(function (d) { return d.date === todayIso; }) ||
-      sorted.find(function (d) { return !d.date || d.date >= todayIso; }) ||
-      sorted[0];
 
-    if (!target) {
-      cardEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune étape avec un lieu renseigné pour l\'instant.</p>';
+    if (!sorted.length) {
+      listEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune étape avec un lieu renseigné pour l\'instant.</p>';
       return;
     }
 
-    cardEl.innerHTML = '<div class="weather-card"><div class="wc-place">Chargement...</div></div>';
+    listEl.innerHTML = sorted
+      .map(function (d) {
+        var status = !d.date ? '' : d.date === todayIso ? 'today' : d.date < todayIso ? 'past' : '';
+        return (
+          '<div class="weather-day-row ' + status + '" data-row-id="' + d.id + '">' +
+          '<div class="wd-left"><div class="wd-icon">…</div>' +
+          '<div><h4>Jour ' + d.day_number + (status === 'today' ? ' · Aujourd\'hui' : '') + '</h4>' +
+          '<p>' + escapeHtml(d.location_label) + (d.date ? ' · ' + formatShortDate(d.date) : '') + '</p></div></div>' +
+          '<div class="wd-temps">…</div>' +
+          '</div>'
+        );
+      })
+      .join('');
 
-    var weather = await window.MyCompanion.getWeatherForLocation(target.location_label);
+    var geocodeCache = {};
+    sorted.forEach(function (d) {
+      window.MyCompanion.getWeatherForDate(d.location_label, d.date, geocodeCache).then(function (weather) {
+        var row = listEl.querySelector('.weather-day-row[data-row-id="' + d.id + '"]');
+        if (!row) return;
+        var iconEl = row.querySelector('.wd-icon');
+        var tempsEl = row.querySelector('.wd-temps');
+        if (!weather) {
+          iconEl.textContent = '—';
+          tempsEl.innerHTML = '<span>indisponible</span>';
+          return;
+        }
+        var codeInfo = WEATHER_CODES[weather.weatherCode] || ['🌡️', 'Météo'];
+        iconEl.textContent = codeInfo[0];
+        tempsEl.innerHTML = weather.maxTemp + '° <span>/ ' + weather.minTemp + '°</span>';
+      });
+    });
+  };
+
+  // ---- Météo : recherche libre d'un lieu ----
+  window.MyCompanion.renderWeatherSearchResult = async function (query) {
+    var resultEl = document.getElementById('weatherSearchResult');
+    if (!resultEl) return;
+
+    resultEl.innerHTML = '<div class="weather-card"><div class="wc-place">Recherche...</div></div>';
+
+    var weather = await window.MyCompanion.getWeatherForLocation(query);
     if (!weather) {
-      cardEl.innerHTML =
-        '<p style="color:#8a8470;font-size:13px;">Météo indisponible pour "' +
-        escapeHtml(target.location_label) + '" pour le moment.</p>';
+      resultEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Lieu introuvable ou météo indisponible pour "' + escapeHtml(query) + '".</p>';
       return;
     }
 
     var codeInfo = WEATHER_CODES[weather.weatherCode] || ['🌡️', 'Météo'];
-    cardEl.innerHTML =
+    resultEl.innerHTML =
       '<div class="weather-card">' +
       '<div class="wc-place">' + escapeHtml(weather.place) + '</div>' +
       '<div class="wc-icon">' + codeInfo[0] + '</div>' +
@@ -541,6 +573,17 @@ window.MyCompanion = window.MyCompanion || {};
       (weather.minTemp != null ? '<span>Min <b>' + weather.minTemp + '°</b></span>' : '') +
       (weather.maxTemp != null ? '<span>Max <b>' + weather.maxTemp + '°</b></span>' : '') +
       '</div></div>';
+  };
+
+  window.MyCompanion.initWeatherSearch = function () {
+    var form = document.getElementById('weatherSearchForm');
+    if (!form || form.dataset.wired) return;
+    form.dataset.wired = '1';
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var query = document.getElementById('weatherSearchInput').value.trim();
+      if (query) window.MyCompanion.renderWeatherSearchResult(query);
+    });
   };
 
   // ---- Frais partagés ----

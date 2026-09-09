@@ -18,6 +18,9 @@
     passport: 'Passeport', esta: 'ESTA', insurance: 'Assurance',
     rental: 'Location voiture', ticket: 'Billet', other: 'Autre',
   };
+  // Équipements courants proposés en case à cocher pour les étapes de type
+  // hôtel — réutilisent le même système de badges que le champ libre.
+  var HOTEL_AMENITIES = ['Piscine', 'Parking', 'Salle de sport', 'Wifi gratuit', 'Petit-déjeuner inclus', 'Climatisation'];
 
   function $(id) { return document.getElementById(id); }
   function escapeHtml(str) {
@@ -342,7 +345,18 @@
 
   function itemFieldsHtml(defaults) {
     var d = defaults || {};
-    var badgesValue = (d.badge_labels || []).join(', ');
+    var existingBadges = d.badge_labels || [];
+    var freeTextBadges = existingBadges.filter(function (b) { return HOTEL_AMENITIES.indexOf(b) === -1; });
+
+    var amenitiesHtml = HOTEL_AMENITIES.map(function (label) {
+      var checked = existingBadges.indexOf(label) !== -1 ? ' checked' : '';
+      return (
+        '<label style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:400;margin:0 12px 6px 0;">' +
+        '<input type="checkbox" name="amenity" value="' + escapeHtml(label) + '"' + checked + '> ' + escapeHtml(label) +
+        '</label>'
+      );
+    }).join('');
+
     return (
       '<div class="field"><label>Heure</label><input type="time" name="time" required style="width:110px;" value="' + escapeHtml(d.time || '') + '"></div>' +
       '<div class="field"><label>Type</label><select name="item_type">' +
@@ -354,9 +368,19 @@
       '</select></div>' +
       '<div class="field"><label>Titre</label><input type="text" name="title" placeholder="Cadillac Ranch" required value="' + escapeHtml(d.title || '') + '"></div>' +
       '<div class="field"><label>Nom du lieu pour Maps</label><input type="text" name="map_query" placeholder="Cadillac Ranch, Amarillo TX" style="width:200px;" value="' + escapeHtml(d.map_query || '') + '"></div>' +
-      '<div class="field"><label>Badges (virgules)</label><input type="text" name="badges" placeholder="Payé ✓, Parking inclus" value="' + escapeHtml(badgesValue) + '"></div>' +
+      '<div class="field" style="flex:1 1 100%;"><label>Équipements</label><div>' + amenitiesHtml + '</div></div>' +
+      '<div class="field" style="flex:1 1 100%;"><label>Autres badges (virgules)</label><input type="text" name="badges" placeholder="Payé ✓, Vue sur mer" style="width:100%;" value="' + escapeHtml(freeTextBadges.join(', ')) + '"></div>' +
       '<div class="field"><label>' + (d.image_path ? 'Remplacer le visuel' : 'Visuel (optionnel)') + '</label><input type="file" name="image" accept="image/*"></div>'
     );
+  }
+
+  function collectBadges(form) {
+    var checked = Array.prototype.map.call(
+      form.querySelectorAll('input[name="amenity"]:checked'),
+      function (el) { return el.value; }
+    );
+    var freeText = form.badges.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    return checked.concat(freeText);
   }
 
   async function loadDays() {
@@ -428,7 +452,7 @@
     e.preventDefault();
     var form = e.target;
     var itemId = form.dataset.itemId;
-    var badges = form.badges.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    var badges = collectBadges(form);
 
     var payload = {
       time: form.time.value.trim(),
@@ -470,7 +494,7 @@
     e.preventDefault();
     var form = e.target;
     var dayId = form.dataset.dayId;
-    var badges = form.badges.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    var badges = collectBadges(form);
 
     var countRes = await supabase.from('itinerary_items').select('id', { count: 'exact', head: true }).eq('day_id', dayId);
     var sortOrder = (countRes.count || 0) + 1;

@@ -17,6 +17,14 @@
   (`js/auth.js`, `#authGate` dans `index.html`)
 - Modification en place des étapes d'itinéraire depuis l'admin (plus
   besoin de supprimer/recréer pour changer une heure, un titre, etc.)
+- Équipements hôtel en cases à cocher (piscine, parking, salle de sport...)
+  dans l'admin, réutilisent le système de badges déjà affiché côté client
+  — champ "Autres badges" toujours dispo en saisie libre à côté
+- Compagnon de route sans compte : n'importe quel voyageur peut ajouter une
+  personne (juste un prénom) depuis Frais partagés pour pouvoir lui
+  attribuer des dépenses, même si elle n'utilise pas l'appli
+- Météo : toutes les étapes du voyage (passées/en cours/à venir) listées
+  avec min/max du jour, + recherche libre d'un lieu quelconque
 
 ## À faire
 
