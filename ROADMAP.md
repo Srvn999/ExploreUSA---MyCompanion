@@ -46,6 +46,10 @@
   iPhone/Safari, c'est manuel : Partager → "Sur l'écran d'accueil"
   (Apple ne propose pas de bannière automatique, c'est une limite d'iOS,
   pas de l'appli)
+- À faire : remplacer le logo généré par le vrai logo de l'entreprise
+  (Alexia l'a en local). Une fois le fichier fourni, remplacer
+  `icons/icon-512.png`, `icons/icon-192.png`, `icons/apple-touch-icon.png`
+  et `icons/favicon-32.png`
 
 ### Messagerie avec Alexia
 - ✅ Fil de discussion de base (voir ci-dessus)
