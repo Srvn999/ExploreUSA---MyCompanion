@@ -9,7 +9,7 @@ values ('00000000-0000-0000-0000-000000000001', 'Route 66', 'États-Unis', '2026
 insert into travelers (trip_id, display_name, owner_slug, role, avatar_letter) values
   ('00000000-0000-0000-0000-000000000001', 'Zoé',    'zoe',    'member',    'Z'),
   ('00000000-0000-0000-0000-000000000001', 'Cécile', 'cecile', 'member',    'C'),
-  ('00000000-0000-0000-0000-000000000001', 'Alexia', 'alexia', 'concierge', 'A');
+  ('00000000-0000-0000-0000-000000000001', 'Alexia', 'alexia', 'guide', 'A');
 
 -- Jour 6 : Amarillo, TX
 insert into itinerary_days (id, trip_id, day_number, date, location_label)

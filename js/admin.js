@@ -6,6 +6,7 @@
   var supabase = null;
   var currentAdmin = null; // { user_id, display_name }
   var currentTripId = null;
+  var currentTrip = null;
   var messagesChannel = null;
 
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
@@ -42,6 +43,9 @@
     $('newTripBtn').addEventListener('click', function () { $('newTripCard').hidden = false; });
     $('cancelNewTrip').addEventListener('click', function () { $('newTripCard').hidden = true; });
     $('newTripForm').addEventListener('submit', onCreateTrip);
+    $('newTripForm').start_date.addEventListener('change', function () {
+      $('newTripForm').end_date.min = this.value;
+    });
     $('travelerForm').addEventListener('submit', onAddTraveler);
     $('dayForm').addEventListener('submit', onAddDay);
     $('flightForm').addEventListener('submit', onAddFlight);
@@ -125,6 +129,10 @@
       start_date: form.start_date.value || null,
       end_date: form.end_date.value || null,
     };
+    if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
+      alert('La date de fin ne peut pas être avant la date de début.');
+      return;
+    }
     var res = await supabase.from('trips').insert(payload).select().single();
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
     form.reset();
@@ -139,12 +147,18 @@
       el.classList.toggle('active', el.dataset.tripId === tripId);
     });
     var trip = (tripsCache || []).find(function (t) { return t.id === tripId; });
+    currentTrip = trip || null;
     $('noTripSelected').hidden = true;
     $('tripEditor').hidden = false;
     $('tripTitle').textContent = trip ? trip.name : 'Voyage';
     $('tripSub').textContent = trip
       ? [trip.destination, trip.start_date, trip.end_date].filter(Boolean).join(' · ')
       : '';
+
+    var dayDateInput = $('dayForm').date;
+    dayDateInput.min = trip && trip.start_date ? trip.start_date : '';
+    dayDateInput.max = trip && trip.end_date ? trip.end_date : '';
+
     switchTab('voyageurs');
     loadTravelers();
     loadDays();
@@ -173,7 +187,7 @@
       .map(function (t) {
         return (
           '<tr><td>' + escapeHtml(t.display_name) + '</td><td>' + escapeHtml(t.owner_slug) + '</td><td>' +
-          (t.role === 'concierge' ? 'Conciergerie' : 'Voyageur') + '</td>' +
+          (t.role === 'guide' ? 'Guide' : 'Voyageur') + '</td>' +
           '<td><button class="danger" data-id="' + t.id + '" data-kind="traveler">Supprimer</button></td></tr>'
         );
       })
@@ -232,12 +246,12 @@
           '<button class="danger" data-id="' + day.id + '" data-kind="day">Supprimer le jour</button></div>' +
           itemsHtml +
           '<form class="inline item-form" data-day-id="' + day.id + '" style="margin-top:10px;">' +
-          '<div class="field"><label>Heure</label><input type="text" name="time" placeholder="09:00" required style="width:70px;"></div>' +
+          '<div class="field"><label>Heure</label><input type="time" name="time" required style="width:110px;"></div>' +
           '<div class="field"><label>Type</label><select name="item_type">' +
           '<option value="hotel">Hôtel</option><option value="activity">Activité</option><option value="restaurant">Restaurant</option>' +
           '</select></div>' +
           '<div class="field"><label>Titre</label><input type="text" name="title" placeholder="Cadillac Ranch" required></div>' +
-          '<div class="field"><label>Recherche Maps</label><input type="text" name="map_query" placeholder="Cadillac Ranch, Amarillo TX"></div>' +
+          '<div class="field"><label>Nom du lieu pour Maps</label><input type="text" name="map_query" placeholder="Cadillac Ranch, Amarillo TX" style="width:200px;"></div>' +
           '<div class="field"><label>Badges (virgules)</label><input type="text" name="badges" placeholder="Payé ✓, Parking inclus"></div>' +
           '<div class="field"><label>Visuel (optionnel)</label><input type="file" name="image" accept="image/*"></div>' +
           '<button class="primary" type="submit">Ajouter l\'étape</button>' +
@@ -427,6 +441,11 @@
     });
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
     input.value = '';
+    // On rafraîchit tout de suite : ne pas dépendre uniquement du temps
+    // réel, qui demande une table déclarée dans la publication Supabase
+    // (voir SETUP.md).
+    var refreshed = await supabase.from('messages').select('*').eq('trip_id', currentTripId).order('created_at');
+    if (!refreshed.error) renderMessages(refreshed.data || []);
   }
 
   // ---------------------------------------------------------------

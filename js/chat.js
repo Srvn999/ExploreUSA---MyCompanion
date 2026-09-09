@@ -56,6 +56,10 @@ window.MyCompanion = window.MyCompanion || {};
           return;
         }
         input.value = '';
+        // Rafraîchit tout de suite : ne pas dépendre uniquement du canal
+        // temps réel pour voir son propre message apparaître.
+        var refreshed = await supabase.from('messages').select('*').eq('trip_id', currentTripId).order('created_at');
+        if (!refreshed.error) renderMessages(refreshed.data || []);
       });
     }
 
