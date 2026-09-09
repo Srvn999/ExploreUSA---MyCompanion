@@ -161,15 +161,43 @@
       <div id="tripSub"></div>
 
       <div class="tabs">
-        <button class="tab-btn active" data-tab="voyageurs">Voyageurs</button>
+        <button class="tab-btn active" data-tab="infos">Infos</button>
+        <button class="tab-btn" data-tab="voyageurs">Voyageurs</button>
         <button class="tab-btn" data-tab="itineraire">Itinéraire</button>
         <button class="tab-btn" data-tab="vols">Vols</button>
         <button class="tab-btn" data-tab="documents">Documents</button>
         <button class="tab-btn" data-tab="messages">Messages</button>
       </div>
 
+      <!-- INFOS -->
+      <section id="tab-infos" class="tab-panel">
+        <div class="card">
+          <h3>Voyage</h3>
+          <form class="inline" id="tripInfoForm">
+            <div class="field"><label>Nom</label><input type="text" name="name" required></div>
+            <div class="field"><label>Destination</label><input type="text" name="destination"></div>
+            <div class="field"><label>Début</label><input type="date" name="start_date"></div>
+            <div class="field"><label>Fin</label><input type="date" name="end_date"></div>
+            <button class="primary" type="submit">Enregistrer</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Urgences</h3>
+          <p style="font-size:12.5px;color:#6b6656;">
+            Affiché aux voyageurs dans l'écran Urgences. Laisse vide tant que tu n'es
+            pas sûr(e) du numéro — mieux vaut rien qu'une erreur.
+          </p>
+          <form class="inline" id="emergencyForm">
+            <div class="field"><label>Téléphone ambassade</label><input type="tel" name="embassy_phone" placeholder="+1 202 944 6000"></div>
+            <div class="field"><label>Téléphone assurance / rapatriement</label><input type="tel" name="insurance_phone"></div>
+            <div class="field" style="flex:1 1 100%;"><label>Notes (adresse, n° de police...)</label><input type="text" name="emergency_notes" style="width:100%;"></div>
+            <button class="primary" type="submit">Enregistrer</button>
+          </form>
+        </div>
+      </section>
+
       <!-- VOYAGEURS -->
-      <section id="tab-voyageurs" class="tab-panel">
+      <section id="tab-voyageurs" class="tab-panel" hidden>
         <div class="card">
           <h3>Ajouter un voyageur</h3>
           <form class="inline" id="travelerForm">
@@ -233,6 +261,23 @@
 
       <!-- DOCUMENTS -->
       <section id="tab-documents" class="tab-panel" hidden>
+        <div class="card">
+          <h3>Location de véhicule</h3>
+          <form class="inline" id="rentalCarForm">
+            <div class="field"><label>Loueur</label><input type="text" name="company" placeholder="Hertz"></div>
+            <div class="field"><label>N° de réservation</label><input type="text" name="booking_ref"></div>
+            <div class="field"><label>Modèle</label><input type="text" name="vehicle_model" placeholder="SUV compact"></div>
+            <div class="field"><label>Prise en charge</label><input type="date" name="pickup_date"></div>
+            <div class="field"><label>Heure</label><input type="time" name="pickup_time" style="width:110px;"></div>
+            <div class="field"><label>Lieu de prise en charge</label><input type="text" name="pickup_location"></div>
+            <div class="field"><label>Retour</label><input type="date" name="return_date"></div>
+            <div class="field"><label>Heure</label><input type="time" name="return_time" style="width:110px;"></div>
+            <div class="field"><label>Lieu de retour</label><input type="text" name="return_location"></div>
+            <div class="field"><label>Emplacement du comptoir</label><input type="text" name="counter_location" placeholder="Niveau 2, comptoir 14"></div>
+            <div class="field" style="flex:1 1 100%;"><label>Notes</label><input type="text" name="notes" style="width:100%;"></div>
+            <button class="primary" type="submit">Enregistrer</button>
+          </form>
+        </div>
         <div class="card">
           <h3>Ajouter un document</h3>
           <form class="inline" id="documentForm">

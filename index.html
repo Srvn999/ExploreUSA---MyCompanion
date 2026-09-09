@@ -388,6 +388,30 @@
   }
   .doc-card h4{ font-size:13.5px; font-weight:700; color:var(--navy); margin:0 0 2px; }
   .doc-card p{ font-size:11.5px; color:#8a8470; margin:0; }
+  .emg-btn{
+    display:flex; align-items:center; gap:12px; background:var(--white); border:1px solid var(--line);
+    border-radius:14px; padding:14px; margin-bottom:10px; text-decoration:none;
+  }
+  .emg-btn.primary{ background:var(--terracotta); border-color:var(--terracotta); }
+  .emg-btn.primary h4, .emg-btn.primary p{ color:#fff; }
+  .emg-btn .emg-ic{
+    width:38px; height:38px; flex-shrink:0; border-radius:50%; background:var(--sand-dark);
+    display:flex; align-items:center; justify-content:center; color:var(--terracotta);
+  }
+  .emg-btn.primary .emg-ic{ background:rgba(255,255,255,0.25); color:#fff; }
+  .emg-btn h4{ font-size:14px; font-weight:700; color:var(--navy); margin:0 0 2px; }
+  .emg-btn p{ font-size:11.5px; color:#8a8470; margin:0; }
+  .emg-notes{
+    background:var(--sand-dark); border-radius:14px; padding:14px; font-size:12.5px; color:var(--ink);
+    line-height:1.5; margin-top:6px; white-space:pre-line;
+  }
+  .rental-card{
+    background:var(--white); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:20px;
+  }
+  .rental-card h4{ font-size:14.5px; font-weight:700; color:var(--navy); margin-bottom:10px; }
+  .rental-row{ display:flex; justify-content:space-between; font-size:13px; color:#5b5748; padding:5px 0; border-bottom:1px dashed var(--line); }
+  .rental-row:last-child{ border-bottom:none; }
+  .rental-row b{ color:var(--navy); }
   .back-toast{
     position:absolute; left:50%; bottom:100px; transform:translateX(-50%) translateY(10px);
     background:var(--navy); color:#fff; font-family:'Manrope'; font-size:12.5px; font-weight:700;
@@ -657,12 +681,12 @@
         <h4>Album photo</h4>
         <p>Classé par jour et par lieu, dépôt manuel ou auto</p>
       </div>
-      <div class="plus-tile">
+      <div class="plus-tile" onclick="showTab('urgences')" style="cursor:pointer;">
         <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M2 12h20"/></svg>
         <h4>Urgences</h4>
         <p>911, ambassade, assurance rapatriement en un tap</p>
       </div>
-      <div class="plus-tile">
+      <div class="plus-tile" onclick="showTab('chat')" style="cursor:pointer;">
         <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.6 8.6 0 0 1-3.9-1L3 20l1.1-5.2A8.4 8.4 0 1 1 21 11.5Z"/></svg>
         <h4>Message à Alexia</h4>
         <p>Chat direct avec votre interlocutrice unique</p>
@@ -784,7 +808,19 @@
       </div>
       <h1 style="font-size:20px;">Documents</h1>
     </div>
+    <div id="rentalCarCard"></div>
     <div id="documentsList"></div>
+  </div>
+
+  <!-- URGENCES -->
+  <div class="screen" id="screen-urgences">
+    <div class="album-header">
+      <div class="back-arrow" onclick="showTab('accueil')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Urgences</h1>
+    </div>
+    <div id="emergencyList"></div>
   </div>
 
   <div class="tabbar">

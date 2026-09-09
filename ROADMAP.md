@@ -71,10 +71,15 @@
   externe, à choisir et budgéter avec l'utilisateur avant implémentation
 
 ### Voiture de location
-- Nouvelle section : compagnie, référence de réservation, dates de prise en
-  charge / retour, emplacement du comptoir, modèle du véhicule
-- Lien avec les documents associés (contrat, permis international...) —
-  peut réutiliser la table `documents` existante (catégorie "rental")
+- ✅ Intégrée à l'écran Documents (admin : onglet Documents ; client :
+  carte en haut de l'écran Documents). Table `rental_cars`, une par
+  voyage pour l'instant
+
+### Urgences
+- ✅ Écran dédié : 911 (universel), ambassade et assurance/rapatriement
+  saisis par Alexia (onglet Infos de l'admin — volontairement vide par
+  défaut, jamais de numéro inventé), notes libres, lien direct vers le
+  document "assurance" si uploadé
 
 ### Espace documents
 - ✅ Upload par Alexia depuis l'admin, catégorisation (passeport, ESTA,

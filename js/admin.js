@@ -9,6 +9,7 @@
   var currentTrip = null;
   var editingItemId = null;
   var editingTravelerId = null;
+  var currentRentalCarId = null;
   var messagesChannel = null;
 
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
@@ -48,9 +49,15 @@
     $('newTripForm').start_date.addEventListener('change', function () {
       $('newTripForm').end_date.min = this.value;
     });
+    $('tripInfoForm').addEventListener('submit', onSaveTripInfo);
+    $('tripInfoForm').start_date.addEventListener('change', function () {
+      $('tripInfoForm').end_date.min = this.value;
+    });
+    $('emergencyForm').addEventListener('submit', onSaveEmergency);
     $('travelerForm').addEventListener('submit', onAddTraveler);
     $('dayForm').addEventListener('submit', onAddDay);
     $('flightForm').addEventListener('submit', onAddFlight);
+    $('rentalCarForm').addEventListener('submit', onSaveRentalCar);
     $('documentForm').addEventListener('submit', onAddDocument);
     $('adminChatForm').addEventListener('submit', onSendAdminMessage);
 
@@ -118,7 +125,7 @@
       })
       .join('');
     Array.prototype.forEach.call(listEl.querySelectorAll('.trip-item'), function (el) {
-      el.addEventListener('click', function () { selectTrip(el.dataset.tripId, res.data); });
+      el.addEventListener('click', function () { selectTrip(el.dataset.tripId); });
     });
   }
 
@@ -140,33 +147,82 @@
     form.reset();
     $('newTripCard').hidden = true;
     await loadTrips();
-    selectTrip(res.data.id, [res.data]);
+    selectTrip(res.data.id);
   }
 
-  function selectTrip(tripId, tripsCache) {
+  function selectTrip(tripId) {
     currentTripId = tripId;
     Array.prototype.forEach.call(document.querySelectorAll('.trip-item'), function (el) {
       el.classList.toggle('active', el.dataset.tripId === tripId);
     });
-    var trip = (tripsCache || []).find(function (t) { return t.id === tripId; });
-    currentTrip = trip || null;
     $('noTripSelected').hidden = true;
     $('tripEditor').hidden = false;
-    $('tripTitle').textContent = trip ? trip.name : 'Voyage';
-    $('tripSub').textContent = trip
-      ? [trip.destination, trip.start_date, trip.end_date].filter(Boolean).join(' · ')
-      : '';
 
-    var dayDateInput = $('dayForm').date;
-    dayDateInput.min = trip && trip.start_date ? trip.start_date : '';
-    dayDateInput.max = trip && trip.end_date ? trip.end_date : '';
-
-    switchTab('voyageurs');
+    switchTab('infos');
+    refreshTripInfo();
     loadTravelers();
     loadDays();
     loadFlights();
     loadDocuments();
+    loadRentalCar();
     loadMessages();
+  }
+
+  async function refreshTripInfo() {
+    var res = await supabase.from('trips').select('*').eq('id', currentTripId).maybeSingle();
+    if (res.error || !res.data) return;
+    currentTrip = res.data;
+
+    $('tripTitle').textContent = currentTrip.name || 'Voyage';
+    $('tripSub').textContent = [currentTrip.destination, currentTrip.start_date, currentTrip.end_date]
+      .filter(Boolean)
+      .join(' · ');
+
+    var infoForm = $('tripInfoForm');
+    infoForm.name.value = currentTrip.name || '';
+    infoForm.destination.value = currentTrip.destination || '';
+    infoForm.start_date.value = currentTrip.start_date || '';
+    infoForm.end_date.value = currentTrip.end_date || '';
+
+    var emForm = $('emergencyForm');
+    emForm.embassy_phone.value = currentTrip.embassy_phone || '';
+    emForm.insurance_phone.value = currentTrip.insurance_phone || '';
+    emForm.emergency_notes.value = currentTrip.emergency_notes || '';
+
+    var dayDateInput = $('dayForm').date;
+    dayDateInput.min = currentTrip.start_date || '';
+    dayDateInput.max = currentTrip.end_date || '';
+  }
+
+  async function onSaveTripInfo(e) {
+    e.preventDefault();
+    var form = e.target;
+    var payload = {
+      name: form.name.value.trim(),
+      destination: form.destination.value.trim() || null,
+      start_date: form.start_date.value || null,
+      end_date: form.end_date.value || null,
+    };
+    if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
+      alert('La date de fin ne peut pas être avant la date de début.');
+      return;
+    }
+    var res = await supabase.from('trips').update(payload).eq('id', currentTripId);
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    await refreshTripInfo();
+    await loadTrips();
+  }
+
+  async function onSaveEmergency(e) {
+    e.preventDefault();
+    var form = e.target;
+    var res = await supabase.from('trips').update({
+      embassy_phone: form.embassy_phone.value.trim() || null,
+      insurance_phone: form.insurance_phone.value.trim() || null,
+      emergency_notes: form.emergency_notes.value.trim() || null,
+    }).eq('id', currentTripId);
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    await refreshTripInfo();
   }
 
   function switchTab(tab) {
@@ -479,6 +535,50 @@
   // ---------------------------------------------------------------
   // DOCUMENTS
   // ---------------------------------------------------------------
+
+  async function loadRentalCar() {
+    var res = await supabase.from('rental_cars').select('*').eq('trip_id', currentTripId).order('created_at').limit(1).maybeSingle();
+    if (res.error) { console.warn(res.error); return; }
+    currentRentalCarId = res.data ? res.data.id : null;
+    var form = $('rentalCarForm');
+    var r = res.data || {};
+    form.company.value = r.company || '';
+    form.booking_ref.value = r.booking_ref || '';
+    form.vehicle_model.value = r.vehicle_model || '';
+    form.pickup_date.value = r.pickup_date || '';
+    form.pickup_time.value = r.pickup_time || '';
+    form.pickup_location.value = r.pickup_location || '';
+    form.return_date.value = r.return_date || '';
+    form.return_time.value = r.return_time || '';
+    form.return_location.value = r.return_location || '';
+    form.counter_location.value = r.counter_location || '';
+    form.notes.value = r.notes || '';
+  }
+
+  async function onSaveRentalCar(e) {
+    e.preventDefault();
+    var form = e.target;
+    var payload = {
+      trip_id: currentTripId,
+      company: form.company.value.trim() || null,
+      booking_ref: form.booking_ref.value.trim() || null,
+      vehicle_model: form.vehicle_model.value.trim() || null,
+      pickup_date: form.pickup_date.value || null,
+      pickup_time: form.pickup_time.value || null,
+      pickup_location: form.pickup_location.value.trim() || null,
+      return_date: form.return_date.value || null,
+      return_time: form.return_time.value || null,
+      return_location: form.return_location.value.trim() || null,
+      counter_location: form.counter_location.value.trim() || null,
+      notes: form.notes.value.trim() || null,
+    };
+    var res = currentRentalCarId
+      ? await supabase.from('rental_cars').update(payload).eq('id', currentRentalCarId)
+      : await supabase.from('rental_cars').insert(payload).select().single();
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    if (!currentRentalCarId && res.data) currentRentalCarId = res.data.id;
+    alert('Location de véhicule enregistrée.');
+  }
 
   async function loadDocuments() {
     var res = await supabase.from('documents').select('*').eq('trip_id', currentTripId).order('created_at', { ascending: false });

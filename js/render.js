@@ -370,4 +370,104 @@ window.MyCompanion = window.MyCompanion || {};
       });
     });
   };
+
+  // ---- Voiture de location (carte dans l'écran Documents) ----
+  window.MyCompanion.renderRentalCar = function (rentalCar) {
+    var el = document.getElementById('rentalCarCard');
+    if (!el) return;
+    if (!rentalCar) { el.innerHTML = ''; return; }
+
+    var rows = [];
+    if (rentalCar.company) rows.push(['Loueur', rentalCar.company]);
+    if (rentalCar.booking_ref) rows.push(['Réservation', rentalCar.booking_ref]);
+    if (rentalCar.vehicle_model) rows.push(['Véhicule', rentalCar.vehicle_model]);
+    if (rentalCar.pickup_date) {
+      rows.push([
+        'Prise en charge',
+        [rentalCar.pickup_date, rentalCar.pickup_time].filter(Boolean).join(' à ') +
+          (rentalCar.pickup_location ? ' · ' + rentalCar.pickup_location : ''),
+      ]);
+    }
+    if (rentalCar.return_date) {
+      rows.push([
+        'Retour',
+        [rentalCar.return_date, rentalCar.return_time].filter(Boolean).join(' à ') +
+          (rentalCar.return_location ? ' · ' + rentalCar.return_location : ''),
+      ]);
+    }
+    if (rentalCar.counter_location) rows.push(['Comptoir', rentalCar.counter_location]);
+    if (rentalCar.notes) rows.push(['Notes', rentalCar.notes]);
+
+    if (!rows.length) { el.innerHTML = ''; return; }
+
+    el.innerHTML =
+      '<div class="rental-card"><h4>🚗 Voiture de location</h4>' +
+      rows
+        .map(function (r) {
+          return '<div class="rental-row"><span>' + escapeHtml(r[0]) + '</span><b>' + escapeHtml(r[1]) + '</b></div>';
+        })
+        .join('') +
+      '</div>';
+  };
+
+  // ---- Urgences ----
+  window.MyCompanion.renderUrgences = function (trip, documents) {
+    var listEl = document.getElementById('emergencyList');
+    if (!listEl) return;
+
+    var PHONE_ICON =
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L7.9 9.9a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2Z"/></svg>';
+
+    var blocks = [];
+
+    blocks.push(
+      '<a class="emg-btn primary" href="tel:911">' +
+      '<div class="emg-ic">' + PHONE_ICON + '</div>' +
+      '<div><h4>Urgences (911)</h4><p>Police, pompiers, secours médicaux</p></div>' +
+      '</a>'
+    );
+
+    blocks.push(
+      trip && trip.embassy_phone
+        ? '<a class="emg-btn" href="tel:' + escapeHtml(trip.embassy_phone) + '">' +
+          '<div class="emg-ic">' + PHONE_ICON + '</div>' +
+          '<div><h4>Ambassade</h4><p>' + escapeHtml(trip.embassy_phone) + '</p></div></a>'
+        : '<div class="emg-btn"><div class="emg-ic">' + PHONE_ICON + '</div>' +
+          '<div><h4>Ambassade</h4><p>Pas encore renseigné — contactez Alexia</p></div></div>'
+    );
+
+    blocks.push(
+      trip && trip.insurance_phone
+        ? '<a class="emg-btn" href="tel:' + escapeHtml(trip.insurance_phone) + '">' +
+          '<div class="emg-ic">' + PHONE_ICON + '</div>' +
+          '<div><h4>Assurance / rapatriement</h4><p>' + escapeHtml(trip.insurance_phone) + '</p></div></a>'
+        : '<div class="emg-btn"><div class="emg-ic">' + PHONE_ICON + '</div>' +
+          '<div><h4>Assurance / rapatriement</h4><p>Pas encore renseigné — contactez Alexia</p></div></div>'
+    );
+
+    var insuranceDoc = (documents || []).find(function (d) { return d.category === 'insurance'; });
+    if (insuranceDoc) {
+      blocks.push(
+        '<div class="doc-card" data-storage-path="' + escapeHtml(insuranceDoc.storage_path) + '" style="margin-top:10px;">' +
+        '<div class="doc-ic">' + DOC_ICON + '</div>' +
+        '<div><h4>' + escapeHtml(insuranceDoc.title) + '</h4><p>Toucher pour ouvrir votre contrat</p></div>' +
+        '</div>'
+      );
+    }
+
+    if (trip && trip.emergency_notes) {
+      blocks.push('<div class="emg-notes">' + escapeHtml(trip.emergency_notes) + '</div>');
+    }
+
+    listEl.innerHTML = blocks.join('');
+
+    var docTile = listEl.querySelector('.doc-card[data-storage-path]');
+    if (docTile) {
+      docTile.addEventListener('click', function () {
+        window.MyCompanion.getDocumentSignedUrl(docTile.dataset.storagePath).then(function (url) {
+          if (url) window.open(url, '_blank');
+        });
+      });
+    }
+  };
 })();

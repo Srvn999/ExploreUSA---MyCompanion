@@ -38,8 +38,17 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     .eq('trip_id', tripId)
     .order('created_at', { ascending: false });
 
+  var rentalCarRes = await supabase
+    .from('rental_cars')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('created_at')
+    .limit(1)
+    .maybeSingle();
+
   var firstError =
-    tripRes.error || daysRes.error || flightsRes.error || photosRes.error || travelersRes.error || documentsRes.error;
+    tripRes.error || daysRes.error || flightsRes.error || photosRes.error ||
+    travelersRes.error || documentsRes.error || rentalCarRes.error;
   if (firstError) {
     console.warn(
       '[MyCompanion] Erreur Supabase, contenu de démo conservé.',
@@ -65,6 +74,7 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     photos: photosRes.data || [],
     travelers: travelersRes.data || [],
     documents: documentsRes.data || [],
+    rentalCar: rentalCarRes.data || null,
   };
 };
 

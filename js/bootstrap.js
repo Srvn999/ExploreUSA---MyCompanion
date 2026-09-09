@@ -19,6 +19,8 @@
       window.MyCompanion.renderAlbum(bundle.days, bundle.photos, bundle.travelers);
       window.MyCompanion.renderAlbumPreview(bundle.photos);
       window.MyCompanion.renderDocuments(bundle.documents);
+      window.MyCompanion.renderRentalCar(bundle.rentalCar);
+      window.MyCompanion.renderUrgences(bundle.trip, bundle.documents);
       if (window.MyCompanion.initChat) window.MyCompanion.initChat(traveler.trip_id, traveler.id);
 
       window.MyCompanion.getTripPhotoStorageBytes(traveler.trip_id, bundle.travelers).then(function (bytes) {
