@@ -14,6 +14,7 @@
       window.MyCompanion.renderItinerary(bundle.days);
       window.MyCompanion.renderFlights(bundle.flights);
       window.MyCompanion.renderAlbum(bundle.days, bundle.photos, bundle.travelers);
+      if (window.MyCompanion.initChat) window.MyCompanion.initChat(cfg.tripId, bundle.travelers);
     } catch (err) {
       console.warn('[MyCompanion] Chargement Supabase impossible, contenu de démo conservé.', err);
     }

@@ -55,18 +55,30 @@ window.MyCompanion = window.MyCompanion || {};
             })
             .join('');
           return (
-            '<div class="titem">' +
+            '<div class="titem" data-item-id="' + item.id + '">' +
             '<div class="time">' + escapeHtml(item.time) + '</div>' +
             '<div class="card">' +
             '<div class="row1">' +
             '<div><div class="type">' + (TYPE_LABELS[item.item_type] || '') + '</div><h4>' + escapeHtml(item.title) + '</h4></div>' +
             '<div class="maplink" title="Ouvrir dans Maps" data-query="' + escapeHtml(item.map_query || item.title) + '">' + MAPLINK_ICON + '</div>' +
             '</div>' +
+            (item.image_path ? '<img class="step-visual" alt="">' : '') +
             '<div class="badges">' + badges + '</div>' +
             '</div></div>'
           );
         })
         .join('');
+
+      // Visuels d'étape : bucket privé -> URL signée chargée en tâche de fond.
+      (day.itinerary_items || []).forEach(function (item) {
+        if (!item.image_path) return;
+        var titem = timelineEl.querySelector('.titem[data-item-id="' + item.id + '"]');
+        var img = titem && titem.querySelector('img.step-visual');
+        if (!img) return;
+        window.MyCompanion.getStepVisualUrl(item.image_path).then(function (url) {
+          if (url) img.src = url;
+        });
+      });
     }
 
     pillsEl.innerHTML = sorted

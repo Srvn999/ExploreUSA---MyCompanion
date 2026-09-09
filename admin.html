@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>My Companion — Espace Alexia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1C2B45;
+    --navy-light:#2C4066;
+    --terracotta:#C15B3C;
+    --terracotta-dark:#A64A2E;
+    --sand:#F4EBDA;
+    --sand-dark:#E9DCC0;
+    --gold:#D9A544;
+    --sage:#6B7A56;
+    --ink:#21201C;
+    --white:#FFFFFF;
+    --line: rgba(28,43,69,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Manrope',sans-serif;
+    color:var(--ink);
+    background:var(--sand);
+  }
+  h1,h2,h3{font-family:'Fraunces',serif; margin:0;}
+  input, select, textarea, button{ font-family:'Manrope',sans-serif; font-size:14px; }
+  input, select, textarea{
+    padding:9px 11px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  button{ cursor:pointer; }
+  button.primary{
+    background:var(--terracotta); color:#fff; border:none; padding:9px 18px; border-radius:20px; font-weight:700;
+  }
+  button.primary:hover{ background:var(--terracotta-dark); }
+  button.ghost{
+    background:var(--sand-dark); color:var(--navy); border:none; padding:8px 14px; border-radius:20px; font-weight:700;
+  }
+  button.danger{
+    background:none; border:1px solid var(--terracotta-dark); color:var(--terracotta-dark);
+    padding:5px 10px; border-radius:14px; font-size:12px; font-weight:700;
+  }
+
+  /* ---- Login ---- */
+  .login-screen{
+    max-width:360px; margin:100px auto; text-align:center; background:#fff; padding:36px 30px;
+    border-radius:18px; border:1px solid var(--line);
+  }
+  .login-screen h1{ font-size:22px; color:var(--navy); margin-bottom:4px; }
+  .login-screen p{ color:#6b6656; font-size:13.5px; margin-bottom:20px; }
+  .login-screen form{ display:flex; flex-direction:column; gap:10px; }
+  #loginError{ color:var(--terracotta-dark); font-size:12.5px; min-height:16px; margin-top:10px; }
+
+  /* ---- Shell ---- */
+  .app-shell{ display:flex; min-height:100vh; }
+  .sidebar{
+    width:260px; flex-shrink:0; background:var(--navy); color:#fff; padding:26px 20px;
+    display:flex; flex-direction:column;
+  }
+  .sidebar h1{ font-size:18px; color:#fff; }
+  .sidebar .tagline{ font-size:12px; color:#a9b2c4; margin-bottom:22px; }
+  .trip-list{ flex:1; overflow-y:auto; margin:16px 0; display:flex; flex-direction:column; gap:6px; }
+  .trip-item{
+    padding:10px 12px; border-radius:10px; cursor:pointer; font-size:13.5px; font-weight:600;
+    background:rgba(255,255,255,0.06);
+  }
+  .trip-item:hover{ background:rgba(255,255,255,0.12); }
+  .trip-item.active{ background:var(--terracotta); }
+  .trip-item .sub{ font-weight:400; font-size:11.5px; color:#c9d0dd; margin-top:2px; }
+
+  .main{ flex:1; padding:32px 40px; max-width:960px; }
+  #tripTitle{ font-size:24px; color:var(--navy); margin-bottom:4px; }
+  #tripSub{ font-size:13px; color:#6b6656; margin-bottom:22px; }
+
+  .tabs{ display:flex; gap:6px; background:var(--sand-dark); padding:4px; border-radius:14px; margin-bottom:20px; width:fit-content; flex-wrap:wrap;}
+  .tab-btn{
+    border:none; background:none; padding:8px 16px; border-radius:11px; font-weight:700; font-size:13px; color:#6b6656;
+  }
+  .tab-btn.active{ background:#fff; color:var(--navy); }
+
+  .card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:16px; }
+  .card h3{ font-size:15px; color:var(--navy); margin-bottom:12px; }
+  form.inline{ display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-bottom:4px; }
+  form.inline .field{ display:flex; flex-direction:column; gap:3px; }
+  form.inline label{ font-size:11px; font-weight:700; color:#6b6656; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; margin-top:10px; }
+  th{ text-align:left; padding:6px; font-size:11.5px; color:#8a8470; border-bottom:1px solid var(--line); }
+  td{ padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+
+  .day-block{ border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
+  .day-block .day-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .day-block .day-head h4{ font-size:14.5px; color:var(--navy); }
+  .item-row{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0;
+    border-bottom:1px dashed var(--line); font-size:13px;
+  }
+  .item-row:last-child{ border-bottom:none; }
+  .item-row .meta{ color:#8a8470; font-size:11.5px; }
+
+  .msg-thread{
+    display:flex; flex-direction:column; gap:8px; max-height:420px; overflow-y:auto; padding:14px;
+    background:var(--sand-dark); border-radius:12px; margin-bottom:12px;
+  }
+  .msg-bubble{ max-width:65%; padding:9px 13px; border-radius:14px; font-size:13.5px; line-height:1.4; }
+  .msg-bubble .who{ font-size:10.5px; font-weight:700; opacity:.7; margin-bottom:2px; }
+  .msg-bubble.concierge{ align-self:flex-end; background:var(--navy); color:#fff; }
+  .msg-bubble.traveler{ align-self:flex-start; background:#fff; border:1px solid var(--line); }
+  .chat-form{ display:flex; gap:8px; }
+  .chat-form input{ flex:1; }
+
+  #newTripCard{ margin-bottom:20px; }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+  <h1>Espace Alexia</h1>
+  <p>Connexion à l'espace conciergerie My Companion</p>
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email" required autocomplete="username">
+    <input type="password" id="loginPassword" placeholder="Mot de passe" required autocomplete="current-password">
+    <button class="primary" type="submit">Se connecter</button>
+  </form>
+  <div id="loginError"></div>
+</div>
+
+<div id="appShell" class="app-shell" hidden>
+  <aside class="sidebar">
+    <h1>My Companion</h1>
+    <div class="tagline">Espace Alexia</div>
+    <button class="primary" id="newTripBtn">+ Nouveau voyage</button>
+    <div class="trip-list" id="tripList"></div>
+    <button class="ghost" id="logoutBtn">Se déconnecter</button>
+  </aside>
+
+  <main class="main">
+    <div id="newTripCard" class="card" hidden>
+      <h3>Créer un nouveau voyage</h3>
+      <form class="inline" id="newTripForm">
+        <div class="field"><label>Nom</label><input type="text" name="name" placeholder="Route 66" required></div>
+        <div class="field"><label>Destination</label><input type="text" name="destination" placeholder="États-Unis"></div>
+        <div class="field"><label>Début</label><input type="date" name="start_date"></div>
+        <div class="field"><label>Fin</label><input type="date" name="end_date"></div>
+        <button class="primary" type="submit">Créer</button>
+        <button class="ghost" type="button" id="cancelNewTrip">Annuler</button>
+      </form>
+    </div>
+
+    <div id="noTripSelected">
+      <p>Sélectionne un voyage à gauche, ou crée-en un nouveau avec le bouton "+ Nouveau voyage".</p>
+    </div>
+
+    <div id="tripEditor" hidden>
+      <h2 id="tripTitle"></h2>
+      <div id="tripSub"></div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="voyageurs">Voyageurs</button>
+        <button class="tab-btn" data-tab="itineraire">Itinéraire</button>
+        <button class="tab-btn" data-tab="vols">Vols</button>
+        <button class="tab-btn" data-tab="documents">Documents</button>
+        <button class="tab-btn" data-tab="messages">Messages</button>
+      </div>
+
+      <!-- VOYAGEURS -->
+      <section id="tab-voyageurs" class="tab-panel">
+        <div class="card">
+          <h3>Ajouter un voyageur</h3>
+          <form class="inline" id="travelerForm">
+            <div class="field"><label>Prénom</label><input type="text" name="display_name" placeholder="Zoé" required></div>
+            <div class="field"><label>Identifiant court</label><input type="text" name="owner_slug" placeholder="zoe" required></div>
+            <div class="field"><label>Rôle</label>
+              <select name="role"><option value="member">Voyageur</option><option value="concierge">Conciergerie</option></select>
+            </div>
+            <button class="primary" type="submit">Ajouter</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Voyageurs</h3>
+          <table><thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th></th></tr></thead>
+          <tbody id="travelersTableBody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- ITINERAIRE -->
+      <section id="tab-itineraire" class="tab-panel" hidden>
+        <div class="card">
+          <h3>Ajouter un jour</h3>
+          <form class="inline" id="dayForm">
+            <div class="field"><label>Jour n°</label><input type="number" name="day_number" min="1" required style="width:80px;"></div>
+            <div class="field"><label>Date</label><input type="date" name="date"></div>
+            <div class="field"><label>Lieu</label><input type="text" name="location_label" placeholder="Amarillo, TX"></div>
+            <button class="primary" type="submit">Ajouter le jour</button>
+          </form>
+        </div>
+        <div id="daysContainer"></div>
+      </section>
+
+      <!-- VOLS -->
+      <section id="tab-vols" class="tab-panel" hidden>
+        <div class="card">
+          <h3>Ajouter un vol</h3>
+          <form class="inline" id="flightForm">
+            <div class="field"><label>Étiquette</label><input type="text" name="tag" placeholder="ALLER · AF 022" required></div>
+            <div class="field"><label>Statut</label><input type="text" name="status" value="À l'heure"></div>
+            <div class="field"><label>Départ</label><input type="text" name="origin_code" placeholder="CDG" required style="width:70px;"></div>
+            <div class="field"><label>Arrivée</label><input type="text" name="destination_code" placeholder="ORD" required style="width:70px;"></div>
+            <div class="field"><label>Horaires</label><input type="text" name="schedule_label" placeholder="Mer. 12 juin · 10:35 → 13:05" required style="width:240px;"></div>
+            <div class="field"><label>Passager</label><input type="text" name="passenger_name" placeholder="ZOE MARTIN"></div>
+            <div class="field"><label>Porte</label><input type="text" name="gate" style="width:70px;"></div>
+            <div class="field"><label>Embarquement</label><input type="text" name="boarding_time" style="width:80px;"></div>
+            <div class="field"><label>Siège</label><input type="text" name="seat" style="width:70px;"></div>
+            <button class="primary" type="submit">Ajouter</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Vols</h3>
+          <table><thead><tr><th>Étiquette</th><th>Trajet</th><th>Horaires</th><th></th></tr></thead>
+          <tbody id="flightsTableBody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- DOCUMENTS -->
+      <section id="tab-documents" class="tab-panel" hidden>
+        <div class="card">
+          <h3>Ajouter un document</h3>
+          <form class="inline" id="documentForm">
+            <div class="field"><label>Titre</label><input type="text" name="title" placeholder="Passeport Zoé" required></div>
+            <div class="field"><label>Catégorie</label>
+              <select name="category">
+                <option value="passport">Passeport</option>
+                <option value="esta">ESTA</option>
+                <option value="insurance">Assurance</option>
+                <option value="rental">Location voiture</option>
+                <option value="ticket">Billet</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+            <div class="field"><label>Fichier</label><input type="file" name="file" required></div>
+            <button class="primary" type="submit">Envoyer</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Documents du voyage</h3>
+          <table><thead><tr><th>Titre</th><th>Catégorie</th><th></th></tr></thead>
+          <tbody id="documentsTableBody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- MESSAGES -->
+      <section id="tab-messages" class="tab-panel" hidden>
+        <div class="card">
+          <h3>Messages</h3>
+          <div class="msg-thread" id="adminMsgThread"></div>
+          <form class="chat-form" id="adminChatForm">
+            <input type="text" id="adminChatInput" placeholder="Répondre..." autocomplete="off">
+            <button class="primary" type="submit">Envoyer</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  window.MYCOMPANION_CONFIG = {
+    supabaseUrl: "https://vwiqpmcshwdtwgtnqduf.supabase.co",
+    supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aXFwbWNzaHdkdHdndG5xZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTkwMTcsImV4cCI6MjEwNDQ3NTAxN30.eURwHlonJDZHP8xIYoA-zzRR_KXXD7IVntEDOLlXHoU"
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

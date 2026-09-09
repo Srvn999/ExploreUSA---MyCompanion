@@ -8,16 +8,41 @@ s'afficher exactement comme avant (données statiques).
 ## Structure du projet
 
 ```
-index.html                       — le prototype (design inchangé)
+index.html                       — le prototype client (design inchangé)
+admin.html                       — l'espace Alexia (conciergerie)
 js/
   supabaseClient.js               — crée le client Supabase
   data.js                         — fonctions de lecture/écriture (fetch, upload photo...)
   render.js                       — transforme les données en HTML identique au design
+  chat.js                         — fil de discussion client <-> Alexia
   bootstrap.js                    — point d'entrée, remplace la démo si Supabase répond
+  admin.js                        — toute la logique de l'espace Alexia
 supabase/
-  migrations/0001_init.sql        — schéma complet (tables, sécurité, storage)
+  migrations/0001_init.sql        — schéma de base (tables, sécurité, storage)
+  migrations/0002_demo_public_read.sql — lecture publique temporaire du voyage démo
+  migrations/0003_admin_and_messages.sql — admins, documents, messages, visuels d'étape
   seed.sql                        — données de démo (reproduit l'exemple statique)
 ```
+
+## Créer le compte admin d'Alexia
+
+Après avoir exécuté `0003_admin_and_messages.sql` dans le SQL Editor :
+
+1. Dans Supabase, va dans **Authentication → Users → Add user**.
+2. Renseigne l'email d'Alexia et un mot de passe (coche "Auto Confirm User"
+   pour ne pas avoir besoin de valider par email).
+3. Clique sur **Create user**, puis copie l'**UUID** de l'utilisateur créé
+   (colonne "UID" dans la liste).
+4. Retourne dans le **SQL Editor**, nouvelle requête, et exécute (en
+   remplaçant l'UUID) :
+
+```sql
+insert into admins (user_id, display_name)
+values ('<uuid-copié-à-l-étape-3>', 'Alexia');
+```
+
+5. Ouvre `admin.html` (même adresse que `index.html`, en remplaçant le nom
+   du fichier) et connecte-toi avec l'email/mot de passe créés à l'étape 2.
 
 ## 1. Créer le projet Supabase
 

@@ -319,6 +319,27 @@
   .caption{
     text-align:center; color:#5b5748; font-family:'Manrope'; font-size:13px; margin-top:22px; max-width:390px;
   }
+  .titem .card img.step-visual{
+    width:100%; height:120px; object-fit:cover; border-radius:10px; margin-top:10px; display:block;
+  }
+  .msg-thread{
+    display:flex; flex-direction:column; gap:8px; padding:6px 2px 16px;
+  }
+  .msg-bubble{
+    max-width:75%; padding:10px 14px; border-radius:16px; font-size:13.5px; line-height:1.4;
+  }
+  .msg-bubble.traveler{ align-self:flex-end; background:var(--terracotta); color:#fff; border-bottom-right-radius:4px; }
+  .msg-bubble.concierge{ align-self:flex-start; background:var(--white); border:1px solid var(--line); border-bottom-left-radius:4px; }
+  .chat-form{
+    position:absolute; left:20px; right:20px; bottom:90px; display:flex; gap:8px;
+  }
+  .chat-form input{
+    flex:1; padding:11px 14px; border-radius:22px; border:1px solid var(--line); font-family:'Manrope'; font-size:13.5px;
+  }
+  .chat-form button{
+    background:var(--terracotta); color:#fff; border:none; padding:0 18px; border-radius:22px; font-family:'Manrope';
+    font-weight:700; font-size:13px; cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -374,7 +395,7 @@
       <div class="alexia-avatar">A</div>
       <div>
         <p>Comment se passe votre séjour ? Je suis à seulement un message si besoin 😉</p>
-        <button>Écrire à Alexia</button>
+        <button onclick="showTab('chat')">Écrire à Alexia</button>
       </div>
     </div>
   </div>
@@ -649,6 +670,21 @@
     </div>
   </div>
 
+  <!-- CHAT AVEC ALEXIA -->
+  <div class="screen" id="screen-chat">
+    <div class="album-header">
+      <div class="back-arrow" onclick="showTab('accueil')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Alexia</h1>
+    </div>
+    <div class="msg-thread" id="chatThread"></div>
+    <form class="chat-form" id="chatForm">
+      <input type="text" id="chatInput" placeholder="Écrire à Alexia..." autocomplete="off">
+      <button type="submit">Envoyer</button>
+    </form>
+  </div>
+
   <div class="tabbar">
     <button class="tabbtn active" id="nav-accueil" onclick="showTab('accueil')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Accueil
@@ -781,6 +817,7 @@
 <script src="js/supabaseClient.js"></script>
 <script src="js/data.js"></script>
 <script src="js/render.js"></script>
+<script src="js/chat.js"></script>
 <script src="js/bootstrap.js"></script>
 
 </body>

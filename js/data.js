@@ -58,6 +58,18 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
   };
 };
 
+// Visuel d'étape d'itinéraire (bucket 'trip-assets', privé lui aussi).
+window.MyCompanion.getStepVisualUrl = async function (storagePath) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase || !storagePath) return null;
+  var res = await supabase.storage.from('trip-assets').createSignedUrl(storagePath, 3600);
+  if (res.error) {
+    console.warn('[MyCompanion] Erreur URL signée (visuel)', res.error);
+    return null;
+  }
+  return res.data.signedUrl;
+};
+
 // Bucket 'trip-photos' privé -> on passe par une URL signée temporaire.
 window.MyCompanion.getPhotoSignedUrl = async function (storagePath) {
   var supabase = window.MyCompanion.client;

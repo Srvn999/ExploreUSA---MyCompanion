@@ -6,13 +6,21 @@
 - Backend Supabase créé : schéma, sécurité (RLS), stockage photos
 - Itinéraire et vols branchés sur les vraies données
 - Appli en ligne sur GitHub Pages
+- Espace admin (`admin.html`) : Alexia crée des voyages, gère voyageurs,
+  itinéraire jour par jour (avec visuel optionnel par étape), vols et
+  documents
+- Messagerie client ↔ Alexia (chat en temps réel, voir `screen-chat` dans
+  `index.html` et l'onglet Messages d'`admin.html`)
 
 ## À faire
 
 ### Connexion & sécurité
 - Écran de connexion par voyageur (email / lien magique) pour Zoé, Cécile, Alexia
-- Retirer la règle de lecture publique temporaire une fois la connexion en place
-  (voir `supabase/migrations/0002_demo_public_read.sql`)
+- Retirer les règles de lecture/écriture publiques temporaires une fois la
+  connexion en place :
+  - `supabase/migrations/0002_demo_public_read.sql`
+  - Les policies "demo public ..." de `0003_admin_and_messages.sql`
+  (le chat démo n'envoie actuellement qu'au nom de Zoé, en dur)
 
 ### Appli installable (PWA)
 - Ajouter un logo/icône de l'appli
@@ -20,27 +28,28 @@
   sans barre d'adresse) — pas besoin d'App Store / Play Store
 
 ### Messagerie avec Alexia
-- Vrai fil de discussion client ↔ Alexia (remplace le bouton "Écrire à Alexia"
-  actuel qui ne fait rien)
-- Historique des messages, notifications
+- ✅ Fil de discussion de base (voir ci-dessus)
+- Reste à faire : notifications (push/email) quand un message arrive,
+  historique multi-appareils une fois l'auth voyageur en place
 
 ### Page admin pour Alexia
-- Interface séparée où Alexia renseigne/modifie les informations d'un client :
-  itinéraire, vols, documents, etc. (sans toucher au code ni à Supabase
-  directement)
-- Gestion multi-clients (plusieurs voyages en parallèle)
+- ✅ Version de base (voir ci-dessus)
+- Reste à faire : édition d'une étape existante (aujourd'hui on peut
+  seulement ajouter/supprimer, pas modifier en place), réordonner les
+  étapes par glisser-déposer, page de connexion "mot de passe oublié"
 
 ### Voiture de location
 - Nouvelle section : compagnie, référence de réservation, dates de prise en
   charge / retour, emplacement du comptoir, modèle du véhicule
-- Lien avec les documents associés (contrat, permis international...)
+- Lien avec les documents associés (contrat, permis international...) —
+  peut réutiliser la table `documents` existante (catégorie "rental")
 
 ### Espace documents
-- Zone dédiée pour stocker les documents importants par voyage : passeports,
-  ESTA, assurance voyage, contrat de location, billets... (au-delà du simple
-  "checklist" actuel dans Plus)
-- Upload et consultation, protégé comme l'album photo (même logique de bucket
-  privé + RLS)
+- ✅ Upload par Alexia depuis l'admin, catégorisation (passeport, ESTA,
+  assurance, location, billet, autre)
+- Reste à faire côté client : un écran dans `index.html` pour que les
+  voyageurs consultent/téléchargent leurs documents (actuellement
+  uploadables uniquement, pas encore affichés côté client)
 
 ## Pour la prochaine session
 
