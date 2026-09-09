@@ -165,6 +165,14 @@ window.MyCompanion = window.MyCompanion || {};
       return a.day_number - b.day_number;
     });
 
+    // Toutes les étapes de tous les jours, pour retrouver l'objet complet
+    // au clic sur une carte (ouverture de la fiche détail) quel que soit
+    // le jour affiché.
+    var itemsById = {};
+    sorted.forEach(function (day) {
+      (day.itinerary_items || []).forEach(function (item) { itemsById[item.id] = item; });
+    });
+
     function renderDay(day) {
       timelineEl.innerHTML = (day.itinerary_items || [])
         .map(function (item) {
@@ -216,14 +224,128 @@ window.MyCompanion = window.MyCompanion || {};
       });
     });
 
-    timelineEl.addEventListener('click', function (e) {
-      var el = e.target.closest('.maplink');
-      if (!el) return;
-      var q = el.dataset.query;
-      if (q) window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank');
-    });
+    if (!timelineEl.dataset.wired) {
+      timelineEl.dataset.wired = '1';
+      timelineEl.addEventListener('click', function (e) {
+        var mapEl = e.target.closest('.maplink');
+        if (mapEl) {
+          var q = mapEl.dataset.query;
+          if (q) window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank');
+          return;
+        }
+        var cardEl = e.target.closest('.titem .card');
+        if (!cardEl) return;
+        var titemEl = cardEl.closest('.titem');
+        var item = titemEl && itemsById[titemEl.dataset.itemId];
+        if (item && window.MyCompanion.renderItemDetail) {
+          window.MyCompanion.renderItemDetail(item);
+          if (window.showTab) window.showTab('item-detail');
+        }
+      });
+    }
 
     renderDay(sorted[0]);
+  };
+
+  // ---- Fiche détail d'une étape (adresse, horaires, conseil d'Alexia,
+  // galerie de photos, distance GPS) ----
+  window.MyCompanion.renderItemDetail = function (item) {
+    var titleEl = document.getElementById('itemDetailTitle');
+    var contentEl = document.getElementById('itemDetailContent');
+    if (!titleEl || !contentEl || !item) return;
+
+    titleEl.textContent = item.title;
+
+    var mapQuery = item.map_query || item.address || item.title;
+    var badges = (item.badge_labels || [])
+      .map(function (b) { return '<span class="badge ' + classifyBadge(b) + '">' + escapeHtml(b) + '</span>'; })
+      .join('');
+
+    var html = '<div class="item-detail-type">' + (TYPE_LABELS[item.item_type] || '') + '</div>';
+    html += item.image_path ? '<img class="item-detail-hero" id="itemDetailHero" alt="">' : '';
+
+    html +=
+      '<div class="item-detail-row">' +
+      '<div class="ic">' + MAPLINK_ICON + '</div>' +
+      '<div class="txt">' +
+      (item.address ? '<b>Adresse</b>' + escapeHtml(item.address) + ' · ' : '<b>Lieu</b>') +
+      '<a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery) + '" target="_blank" rel="noopener">Ouvrir dans Maps</a>' +
+      '</div></div>';
+
+    if (item.opening_hours) {
+      html +=
+        '<div class="item-detail-row">' +
+        '<div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>' +
+        '<div class="txt"><b>Horaires</b>' + escapeHtml(item.opening_hours) + '</div></div>';
+    }
+
+    html +=
+      '<div class="item-detail-row" id="itemDetailDistanceRow" style="display:none;">' +
+      '<div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-7-7 18-3-8-8-3Z"/></svg></div>' +
+      '<div class="txt"><b>Distance</b><span id="itemDetailDistanceValue"></span></div></div>';
+
+    if (badges) html += '<div class="badges">' + badges + '</div>';
+
+    contentEl.innerHTML = html;
+
+    if (item.image_path) {
+      window.MyCompanion.getStepVisualUrl(item.image_path).then(function (url) {
+        var hero = document.getElementById('itemDetailHero');
+        if (hero && url) hero.src = url;
+      });
+    }
+
+    if (item.alexia_tip) {
+      contentEl.insertAdjacentHTML(
+        'beforeend',
+        '<div class="alexia-card" style="margin-top:6px;">' +
+          '<div class="alexia-avatar">A</div>' +
+          '<div><p>' + escapeHtml(item.alexia_tip) + '</p></div>' +
+          '</div>'
+      );
+    }
+
+    // Galerie de photos : chargée à part (URLs signées), affichée dès
+    // qu'elle arrive plutôt que de bloquer le reste de la fiche.
+    window.MyCompanion.getItemGalleryPhotos(item.id).then(function (photos) {
+      if (!photos || !photos.length) return;
+      contentEl.insertAdjacentHTML(
+        'beforeend',
+        '<p class="item-detail-gallery-label">Photos</p>' +
+          '<div class="item-detail-gallery">' +
+          photos.map(function (p) { return '<img src="' + p.url + '" alt="" data-full="' + p.url + '">'; }).join('') +
+          '</div>'
+      );
+      var galleryEl = contentEl.querySelector('.item-detail-gallery');
+      if (galleryEl) {
+        galleryEl.addEventListener('click', function (e) {
+          var img = e.target.closest('img[data-full]');
+          if (img) window.open(img.dataset.full, '_blank');
+        });
+      }
+    });
+
+    // Distance depuis la position actuelle (si le visiteur autorise la
+    // géolocalisation et que le lieu de l'étape peut être géocodé).
+    var distRow = document.getElementById('itemDetailDistanceRow');
+    var distValue = document.getElementById('itemDetailDistanceValue');
+    if (distRow && distValue) {
+      Promise.all([
+        window.MyCompanion.getCurrentPosition(),
+        window.MyCompanion.geocodeLabel(item.address || mapQuery),
+      ]).then(function (res) {
+        var pos = res[0];
+        var place = res[1];
+        if (!pos || !place) return;
+        var km = window.MyCompanion.distanceKm(pos.lat, pos.lon, place.lat, place.lon);
+        distValue.textContent =
+          (km < 1
+            ? Math.round(km * 1000) + ' m'
+            : km.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' km') +
+          ' de votre position';
+        distRow.style.display = '';
+      });
+    }
   };
 
   // ---- Vols ----

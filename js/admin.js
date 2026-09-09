@@ -368,6 +368,9 @@
       '</select></div>' +
       '<div class="field"><label>Titre</label><input type="text" name="title" placeholder="Cadillac Ranch" required value="' + escapeHtml(d.title || '') + '"></div>' +
       '<div class="field"><label>Nom du lieu pour Maps</label><input type="text" name="map_query" placeholder="Cadillac Ranch, Amarillo TX" style="width:200px;" value="' + escapeHtml(d.map_query || '') + '"></div>' +
+      '<div class="field" style="flex:1 1 100%;"><label>Adresse</label><input type="text" name="address" placeholder="2201 Hope Rd, Amarillo, TX" style="width:100%;" value="' + escapeHtml(d.address || '') + '"></div>' +
+      '<div class="field" style="flex:1 1 100%;"><label>Horaires d\'ouverture</label><input type="text" name="opening_hours" placeholder="Tous les jours, 8h-20h" style="width:100%;" value="' + escapeHtml(d.opening_hours || '') + '"></div>' +
+      '<div class="field" style="flex:1 1 100%;"><label>Conseil d\'Alexia</label><textarea name="alexia_tip" rows="3" style="width:100%;font-family:\'Manrope\';font-size:14px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);" placeholder="Ne ratez pas la spécialité maison, la sauce piquante...">' + escapeHtml(d.alexia_tip || '') + '</textarea></div>' +
       '<div class="field" style="flex:1 1 100%;"><label>Équipements</label><div>' + amenitiesHtml + '</div></div>' +
       '<div class="field" style="flex:1 1 100%;"><label>Autres badges (virgules)</label><input type="text" name="badges" placeholder="Payé ✓, Vue sur mer" style="width:100%;" value="' + escapeHtml(freeTextBadges.join(', ')) + '"></div>' +
       '<div class="field"><label>' + (d.image_path ? 'Remplacer le visuel' : 'Visuel (optionnel)') + '</label><input type="file" name="image" accept="image/*"></div>'
@@ -391,6 +394,23 @@
       .order('day_number');
     if (res.error) { console.warn(res.error); return; }
 
+    // La bibliothèque de photos n'est chargée que pour l'étape en cours
+    // d'édition (une seule à la fois) : pas besoin de tout récupérer.
+    var galleryPhotos = [];
+    var galleryUrls = {};
+    if (editingItemId) {
+      var photosRes = await supabase
+        .from('itinerary_item_photos')
+        .select('*')
+        .eq('item_id', editingItemId)
+        .order('sort_order');
+      if (!photosRes.error) galleryPhotos = photosRes.data || [];
+      for (var g = 0; g < galleryPhotos.length; g++) {
+        var signedRes = await supabase.storage.from('trip-assets').createSignedUrl(galleryPhotos[g].storage_path, 3600);
+        if (!signedRes.error) galleryUrls[galleryPhotos[g].id] = signedRes.data.signedUrl;
+      }
+    }
+
     var container = $('daysContainer');
     container.innerHTML = (res.data || [])
       .map(function (day) {
@@ -398,12 +418,29 @@
         var itemsHtml = items
           .map(function (it) {
             if (it.id === editingItemId) {
+              var galleryHtml = galleryPhotos.map(function (p) {
+                return (
+                  '<div style="position:relative;display:inline-block;margin:0 8px 8px 0;">' +
+                  '<img src="' + (galleryUrls[p.id] || '') + '" style="width:70px;height:70px;object-fit:cover;border-radius:8px;display:block;">' +
+                  '<button type="button" class="danger" data-id="' + p.id + '" data-kind="itemphoto" title="Supprimer" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;padding:0;line-height:18px;border-radius:50%;font-size:12px;">×</button>' +
+                  '</div>'
+                );
+              }).join('') || '<p class="meta">Aucune photo pour l\'instant.</p>';
+
               return (
                 '<form class="inline item-edit-form" data-item-id="' + it.id + '" style="margin-bottom:10px;">' +
                 itemFieldsHtml(it) +
                 '<button class="primary" type="submit">Enregistrer</button> ' +
                 '<button class="ghost" type="button" data-kind="cancel-edit-item">Annuler</button>' +
-                '</form>'
+                '</form>' +
+                '<div class="field" style="flex:1 1 100%;margin-bottom:10px;">' +
+                '<label>Bibliothèque de photos</label>' +
+                '<div>' + galleryHtml + '</div>' +
+                '<form class="inline item-photos-form" data-item-id="' + it.id + '">' +
+                '<input type="file" name="photos" accept="image/*" multiple>' +
+                '<button class="ghost" type="submit">Ajouter des photos</button>' +
+                '</form>' +
+                '</div>'
               );
             }
             return (
@@ -439,6 +476,9 @@
     Array.prototype.forEach.call(container.querySelectorAll('.item-edit-form'), function (form) {
       form.addEventListener('submit', onSaveItem);
     });
+    Array.prototype.forEach.call(container.querySelectorAll('.item-photos-form'), function (form) {
+      form.addEventListener('submit', onAddItemPhotos);
+    });
     Array.prototype.forEach.call(container.querySelectorAll('[data-kind="edit-item"]'), function (btn) {
       btn.addEventListener('click', function () { editingItemId = btn.dataset.id; loadDays(); });
     });
@@ -459,6 +499,9 @@
       item_type: form.item_type.value,
       title: form.title.value.trim(),
       map_query: form.map_query.value.trim() || null,
+      address: form.address.value.trim() || null,
+      opening_hours: form.opening_hours.value.trim() || null,
+      alexia_tip: form.alexia_tip.value.trim() || null,
       badge_labels: badges,
     };
 
@@ -513,11 +556,40 @@
       item_type: form.item_type.value,
       title: form.title.value.trim(),
       map_query: form.map_query.value.trim() || null,
+      address: form.address.value.trim() || null,
+      opening_hours: form.opening_hours.value.trim() || null,
+      alexia_tip: form.alexia_tip.value.trim() || null,
       badge_labels: badges,
       image_path: imagePath,
       sort_order: sortOrder,
     });
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    await loadDays();
+  }
+
+  async function onAddItemPhotos(e) {
+    e.preventDefault();
+    var form = e.target;
+    var itemId = form.dataset.itemId;
+    var files = Array.prototype.slice.call(form.photos.files);
+    if (!files.length) return;
+
+    var countRes = await supabase.from('itinerary_item_photos').select('id', { count: 'exact', head: true }).eq('item_id', itemId);
+    var sortOrder = countRes.count || 0;
+
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var path = currentTripId + '/' + itemId + '/' + Date.now() + '-' + i + '-' + file.name;
+      var uploadRes = await supabase.storage.from('trip-assets').upload(path, file);
+      if (uploadRes.error) { alert("Erreur d'envoi d'une photo : " + uploadRes.error.message); continue; }
+      var insertRes = await supabase.from('itinerary_item_photos').insert({
+        item_id: itemId,
+        trip_id: currentTripId,
+        storage_path: path,
+        sort_order: sortOrder + i + 1,
+      });
+      if (insertRes.error) alert('Erreur : ' + insertRes.error.message);
+    }
     await loadDays();
   }
 
@@ -711,13 +783,13 @@
         if (!confirm('Confirmer la suppression ?')) return;
         var table = {
           traveler: 'travelers', item: 'itinerary_items', day: 'itinerary_days', flight: 'flights',
-          document: 'documents', esimguide: 'esim_guides',
+          document: 'documents', esimguide: 'esim_guides', itemphoto: 'itinerary_item_photos',
         }[btn.dataset.kind];
         if (!table) return;
         var res = await supabase.from(table).delete().eq('id', btn.dataset.id);
         if (res.error) { alert('Erreur : ' + res.error.message); return; }
         if (table === 'travelers') await loadTravelers();
-        else if (table === 'itinerary_items' || table === 'itinerary_days') await loadDays();
+        else if (table === 'itinerary_items' || table === 'itinerary_days' || table === 'itinerary_item_photos') await loadDays();
         else if (table === 'flights') await loadFlights();
         else if (table === 'documents') await loadDocuments();
         else if (table === 'esim_guides') await loadEsimGuides();

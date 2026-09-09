@@ -25,6 +25,23 @@
   attribuer des dépenses, même si elle n'utilise pas l'appli
 - Météo : toutes les étapes du voyage (passées/en cours/à venir) listées
   avec min/max du jour, + recherche libre d'un lieu quelconque
+- Retour matériel/geste (Android) désormais cohérent avec la navigation à
+  l'écran : depuis Documents/Album/Chat/Urgences/Météo/Frais/e-SIM, un
+  retour ramène à l'écran précédent (`Plus` en général) au lieu de fermer
+  l'appli. Double-retour-pour-quitter réservé à la racine de l'appli
+  installée (`js/backGuard.js`, `history.pushState`/`popstate`)
+- Taxes & pourboires : bloc d'explication culturelle (pourquoi le pourboire
+  n'est pas optionnel aux États-Unis, sauf mention "gratuity included" sur
+  le ticket) directement dans l'outil Taxes & Tips
+- Fiche détail d'une étape d'itinéraire : cliquer sur une étape (hôtel,
+  restaurant, activité) ouvre désormais une fiche avec adresse, horaires
+  d'ouverture, conseil d'Alexia (spécialité/à ne pas rater), une petite
+  bibliothèque de photos si Alexia en a ajouté, et la distance depuis la
+  position actuelle si le GPS est autorisé et le lieu géocodable
+  (`js/render.js` → `renderItemDetail`, `#screen-item-detail`). Migration
+  `0010_item_details.sql` à exécuter (colonnes `address`/`opening_hours`/
+  `alexia_tip` + table `itinerary_item_photos`, réutilise le bucket
+  `trip-assets` existant)
 
 ## À faire
 
@@ -116,6 +133,23 @@
   assurance, location, billet, autre)
 - ✅ Écran côté client (tuile "Documents" dans Plus) : liste groupée par
   catégorie, ouverture via URL signée temporaire
+
+### Fiche détail d'une étape d'itinéraire
+- ✅ Admin : champs Adresse / Horaires d'ouverture / Conseil d'Alexia sur
+  chaque étape, + galerie de photos dédiée (en plus du visuel unique déjà
+  affiché sur la carte de la timeline) : ajout/suppression de plusieurs
+  photos en mode édition d'une étape
+- ✅ Client : cliquer sur une carte d'étape (hors icône Maps) ouvre la
+  fiche détail — adresse avec lien Maps, horaires, conseil d'Alexia (style
+  "message d'Alexia"), galerie de photos (clic = image en plein écran dans
+  un nouvel onglet), distance depuis la position actuelle
+- La distance GPS est calculée côté client (formule de Haversine) à partir
+  de `navigator.geolocation` + un géocodage à la volée de l'adresse/lieu de
+  l'étape (même service gratuit Open-Meteo que la météo) — rien à
+  configurer côté Supabase. Si le voyageur refuse la géoloc ou que le lieu
+  n'est pas géocodable, la ligne "Distance" reste simplement masquée
+- Champs vides (pas d'adresse/horaires/conseil/photo) : la ligne
+  correspondante n'apparaît juste pas sur la fiche, rien d'inventé
 
 ## Pour la prochaine session
 

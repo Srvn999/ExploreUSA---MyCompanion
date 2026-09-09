@@ -269,6 +269,81 @@ window.MyCompanion.getPhotoSignedUrl = async function (storagePath) {
   return res.data.signedUrl;
 };
 
+// Bibliothèque de photos d'une étape d'itinéraire (fiche détail) : on
+// récupère les lignes puis on résout une URL signée par photo (bucket
+// 'trip-assets', privé). Les photos sans URL valide sont ignorées.
+window.MyCompanion.getItemGalleryPhotos = async function (itemId) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase || !itemId) return [];
+  var res = await supabase
+    .from('itinerary_item_photos')
+    .select('*')
+    .eq('item_id', itemId)
+    .order('sort_order');
+  if (res.error) {
+    console.warn('[MyCompanion] Erreur galerie photos', res.error);
+    return [];
+  }
+  var photos = res.data || [];
+  var urls = await Promise.all(
+    photos.map(function (p) {
+      return supabase.storage
+        .from('trip-assets')
+        .createSignedUrl(p.storage_path, 3600)
+        .then(function (r) { return r.error ? null : r.data.signedUrl; });
+    })
+  );
+  return photos
+    .map(function (p, i) { return Object.assign({}, p, { url: urls[i] }); })
+    .filter(function (p) { return p.url; });
+};
+
+// Géocodage simple (même service gratuit que la météo) : renvoie les
+// coordonnées d'un lieu à partir de son adresse/nom, ou null si introuvable.
+window.MyCompanion.geocodeLabel = async function (label) {
+  if (!label) return null;
+  try {
+    var res = await fetch(
+      'https://geocoding-api.open-meteo.com/v1/search?name=' +
+        encodeURIComponent(label) + '&count=1&language=fr&format=json'
+    );
+    var data = await res.json();
+    var place = data.results && data.results[0];
+    if (!place) return null;
+    return { lat: place.latitude, lon: place.longitude };
+  } catch (err) {
+    console.warn('[MyCompanion] Géocodage indisponible', err);
+    return null;
+  }
+};
+
+// Distance à vol d'oiseau (formule de Haversine), en kilomètres.
+window.MyCompanion.distanceKm = function (lat1, lon1, lat2, lon2) {
+  var toRad = function (deg) { return (deg * Math.PI) / 180; };
+  var R = 6371;
+  var dLat = toRad(lat2 - lat1);
+  var dLon = toRad(lon2 - lon1);
+  var a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Position GPS actuelle du visiteur, sous forme de Promise pratique à
+// chaîner. Se résout à null si la géoloc n'est pas dispo/autorisée, plutôt
+// que de rejeter — l'appelant n'a jamais besoin d'un try/catch.
+window.MyCompanion.getCurrentPosition = function () {
+  return new Promise(function (resolve) {
+    if (!navigator.geolocation) { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      function (pos) { resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }); },
+      function () { resolve(null); },
+      { timeout: 8000, maximumAge: 60000 }
+    );
+  });
+};
+
 // Utilitaire prêt à l'emploi pour brancher plus tard le bouton
 // "Depuis la galerie" / "Prendre une photo" de l'album.
 window.MyCompanion.uploadPhoto = async function (params) {

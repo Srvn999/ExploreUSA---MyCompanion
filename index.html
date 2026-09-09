@@ -230,6 +230,13 @@
   .sat-opt{flex:1; text-align:center; padding:10px 4px; border-radius:10px; border:1px solid var(--line); font-size:12.5px; font-weight:700; cursor:pointer; color:#6b6656;}
   .sat-opt.active{background:var(--terracotta); border-color:var(--terracotta); color:#fff;}
   .receipt-total{border-top:1px dashed var(--line); margin-top:14px; padding-top:14px;}
+  .tip-explainer{
+    background:var(--sand-dark); border-radius:16px; padding:16px 18px; margin-top:16px;
+  }
+  .tip-explainer h4{ font-size:13.5px; font-weight:700; color:var(--navy); margin-bottom:10px; }
+  .tip-explainer p{ font-size:12.5px; color:#5b5748; line-height:1.5; margin:0 0 10px; }
+  .tip-explainer p:last-child{ margin-bottom:0; }
+  .tip-explainer b{ color:var(--navy); }
   .rt-row{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; color:#5b5748;}
   .rt-row.grand{font-size:18px; font-weight:800; color:var(--navy); margin-top:8px;}
   .rt-row span:last-child{font-variant-numeric:tabular-nums;}
@@ -345,6 +352,19 @@
   .titem .card img.step-visual{
     width:100%; height:120px; object-fit:cover; border-radius:10px; margin-top:10px; display:block;
   }
+  .titem .card{cursor:pointer;}
+  .item-detail-hero{width:100%; height:170px; object-fit:cover; border-radius:16px; margin-bottom:16px; display:block; background:var(--sand-dark);}
+  .item-detail-type{font-size:12px; color:#8a8470; font-weight:600; margin-bottom:2px;}
+  .item-detail-title{font-size:19px; font-weight:800; color:var(--navy); margin:0 0 14px;}
+  .item-detail-row{display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;}
+  .item-detail-row .ic{width:32px; height:32px; flex-shrink:0; border-radius:50%; background:var(--sand-dark); display:flex; align-items:center; justify-content:center; color:var(--navy);}
+  .item-detail-row .txt{font-size:13.5px; color:var(--ink); line-height:1.4; padding-top:5px;}
+  .item-detail-row .txt b{display:block; font-size:11px; color:#8a8470; font-weight:700; text-transform:uppercase; letter-spacing:.02em; margin-bottom:2px;}
+  .item-detail-row a{color:var(--terracotta-dark); font-weight:700; text-decoration:none;}
+  .item-detail-gallery{display:flex; gap:8px; overflow-x:auto; margin:4px 0 16px; padding-bottom:4px;}
+  .item-detail-gallery::-webkit-scrollbar{display:none;}
+  .item-detail-gallery img{width:84px; height:84px; object-fit:cover; border-radius:12px; flex-shrink:0; cursor:pointer;}
+  .item-detail-gallery-label{font-size:11px; color:#8a8470; font-weight:700; text-transform:uppercase; letter-spacing:.02em; margin:0 0 8px;}
   .msg-thread{
     display:flex; flex-direction:column; gap:8px; padding:6px 2px 16px;
   }
@@ -648,6 +668,17 @@
     </div>
   </div>
 
+  <!-- ITINERAIRE : FICHE DETAIL D'UNE ETAPE -->
+  <div class="screen" id="screen-item-detail">
+    <div class="album-header">
+      <div class="back-arrow" onclick="history.back()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;" id="itemDetailTitle">Détail</h1>
+    </div>
+    <div id="itemDetailContent"></div>
+  </div>
+
   <!-- BUDGET -->
   <div class="screen" id="screen-budget">
     <div class="trip-header"><div><div class="eyebrow">Sur place</div><h1>Outils</h1></div></div>
@@ -701,6 +732,29 @@
           <div class="rt-row"><span>Pourboire (18%)</span><span id="rTip">$10.80</span></div>
           <div class="rt-row grand"><span>Total à payer</span><span id="rTotal">$75.75</span></div>
         </div>
+      </div>
+
+      <div class="tip-explainer">
+        <h4>🇺🇸 Pourquoi le pourboire n'est pas optionnel aux États-Unis</h4>
+        <p>
+          Contrairement à la France, où le service est compris dans le prix par
+          la loi, le salaire des serveurs américains est très souvent en
+          dessous du salaire minimum normal — parfois à peine plus de 2-3$/h —
+          et c'est le pourboire qui complète l'essentiel de leur revenu. Ne
+          pas laisser de pourboire n'est pas vu comme une économie mais comme
+          une vraie offense.
+        </p>
+        <p>
+          <b>15-20% est la norme</b> pour un service correct à excellent,
+          en plus de l'addition et de la taxe. C'est la même logique pour les
+          bars, taxis/VTC, coiffeurs, livraisons...
+        </p>
+        <p>
+          <b>Seule exception</b> : si le ticket indique déjà "gratuity
+          included" ou "service charge" (fréquent pour les grands groupes),
+          le pourboire est déjà compté dans l'addition — inutile d'en
+          rajouter un (sauf si vous voulez remercier davantage).
+        </p>
       </div>
     </div>
   </div>
