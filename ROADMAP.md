@@ -42,6 +42,17 @@
   `0010_item_details.sql` à exécuter (colonnes `address`/`opening_hours`/
   `alexia_tip` + table `itinerary_item_photos`, réutilise le bucket
   `trip-assets` existant)
+- Fiche "Voiture de location" (Documents) : mise en page corrigée
+  (libellé/valeur empilés au lieu de côte à côte, illisible dès qu'une
+  valeur était longue) + dates/heures formatées en français plutôt
+  qu'affichées au format brut du champ HTML
+- Conseils libres d'Alexia par jour ("ne manquez pas The Bean ou la Willis
+  Tower") : idées à voir/faire dans la ville du jour, sans réservation ni
+  horaire, distinctes des étapes programmées — le voyageur suit ou non.
+  Gérées dans l'admin sous chaque jour, affichées sous la timeline de
+  l'écran Itinéraire (`js/render.js` → section `.day-tips` dans
+  `renderItinerary`). Migration `0011_day_tips.sql` à exécuter (nouvelle
+  table `day_tips`)
 
 ## À faire
 

@@ -194,7 +194,7 @@ window.MyCompanion = window.MyCompanion || {};
     });
 
     function renderDay(day) {
-      timelineEl.innerHTML = (day.itinerary_items || [])
+      var itemsHtml = (day.itinerary_items || [])
         .map(function (item) {
           var badges = (item.badge_labels || [])
             .map(function (b) {
@@ -215,6 +215,31 @@ window.MyCompanion = window.MyCompanion || {};
           );
         })
         .join('');
+
+      // Conseils libres d'Alexia pour le temps libre de ce jour (pas de
+      // réservation, pas d'horaire — juste des idées à suivre ou non).
+      var tips = (day.day_tips || []).slice().sort(function (a, b) { return a.sort_order - b.sort_order; });
+      var tipsHtml = !tips.length ? '' : (
+        '<div class="day-tips">' +
+        '<div class="day-tips-title">💡 Suggestions d\'Alexia' + (day.location_label ? ' à ' + escapeHtml(day.location_label) : '') + '</div>' +
+        tips
+          .map(function (t) {
+            return (
+              '<div class="tip-card">' +
+              '<div class="tip-card-body"><h4>' + escapeHtml(t.title) + '</h4>' +
+              (t.description ? '<p>' + escapeHtml(t.description) + '</p>' : '') +
+              '</div>' +
+              (t.map_query
+                ? '<div class="maplink" title="Ouvrir dans Maps" data-query="' + escapeHtml(t.map_query) + '">' + MAPLINK_ICON + '</div>'
+                : '') +
+              '</div>'
+            );
+          })
+          .join('') +
+        '</div>'
+      );
+
+      timelineEl.innerHTML = itemsHtml + tipsHtml;
 
       // Visuels d'étape : bucket privé -> URL signée chargée en tâche de fond.
       (day.itinerary_items || []).forEach(function (item) {

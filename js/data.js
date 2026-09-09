@@ -11,7 +11,7 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
 
   var daysRes = await supabase
     .from('itinerary_days')
-    .select('*, itinerary_items(*)')
+    .select('*, itinerary_items(*), day_tips(*)')
     .eq('trip_id', tripId)
     .order('day_number');
 

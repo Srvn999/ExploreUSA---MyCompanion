@@ -8,6 +8,7 @@
   var currentTripId = null;
   var currentTrip = null;
   var editingItemId = null;
+  var editingTipId = null;
   var editingTravelerId = null;
   var currentRentalCarId = null;
   var editingEsimGuideId = null;
@@ -377,6 +378,18 @@
     );
   }
 
+  // Conseils libres pour le temps libre d'un jour ("ne manquez pas The
+  // Bean") : pas d'horaire ni de réservation, juste une idée à suivre ou
+  // non — à la différence des étapes programmées ci-dessus.
+  function tipFieldsHtml(defaults) {
+    var d = defaults || {};
+    return (
+      '<div class="field" style="flex:1 1 100%;"><label>Titre</label><input type="text" name="title" placeholder="The Bean (Cloud Gate)" required style="width:100%;" value="' + escapeHtml(d.title || '') + '"></div>' +
+      '<div class="field" style="flex:1 1 100%;"><label>Conseil</label><textarea name="description" rows="2" style="width:100%;font-family:\'Manrope\';font-size:14px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);" placeholder="Miroir géant, incontournable pour la photo">' + escapeHtml(d.description || '') + '</textarea></div>' +
+      '<div class="field"><label>Nom du lieu pour Maps (optionnel)</label><input type="text" name="map_query" placeholder="Cloud Gate, Chicago" style="width:200px;" value="' + escapeHtml(d.map_query || '') + '"></div>'
+    );
+  }
+
   function collectBadges(form) {
     var checked = Array.prototype.map.call(
       form.querySelectorAll('input[name="amenity"]:checked'),
@@ -389,7 +402,7 @@
   async function loadDays() {
     var res = await supabase
       .from('itinerary_days')
-      .select('*, itinerary_items(*)')
+      .select('*, itinerary_items(*), day_tips(*)')
       .eq('trip_id', currentTripId)
       .order('day_number');
     if (res.error) { console.warn(res.error); return; }
@@ -456,6 +469,31 @@
           })
           .join('') || '<p class="meta">Aucune étape pour ce jour.</p>';
 
+        var tips = (day.day_tips || []).slice().sort(function (a, b) { return a.sort_order - b.sort_order; });
+        var tipsHtml = tips
+          .map(function (t) {
+            if (t.id === editingTipId) {
+              return (
+                '<form class="inline tip-edit-form" data-tip-id="' + t.id + '" style="margin-bottom:8px;">' +
+                tipFieldsHtml(t) +
+                '<button class="primary" type="submit">Enregistrer</button> ' +
+                '<button class="ghost" type="button" data-kind="cancel-edit-tip">Annuler</button>' +
+                '</form>'
+              );
+            }
+            return (
+              '<div class="item-row">' +
+              '<div><b>' + escapeHtml(t.title) + '</b>' +
+              (t.description ? '<div class="meta">' + escapeHtml(t.description) + '</div>' : '') + '</div>' +
+              '<span>' +
+              '<button class="ghost" data-id="' + t.id + '" data-kind="edit-tip">Modifier</button> ' +
+              '<button class="danger" data-id="' + t.id + '" data-kind="daytip">Supprimer</button>' +
+              '</span>' +
+              '</div>'
+            );
+          })
+          .join('');
+
         return (
           '<div class="day-block" data-day-id="' + day.id + '">' +
           '<div class="day-head"><h4>Jour ' + day.day_number + (day.location_label ? ' · ' + escapeHtml(day.location_label) : '') + '</h4>' +
@@ -465,6 +503,14 @@
           itemFieldsHtml() +
           '<button class="primary" type="submit">Ajouter l\'étape</button>' +
           '</form>' +
+          '<div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);">' +
+          '<h4 style="font-size:13px;margin-bottom:8px;">💡 Conseils libres (temps libre, sans horaire ni réservation)</h4>' +
+          tipsHtml +
+          '<form class="inline tip-form" data-day-id="' + day.id + '" style="margin-top:8px;">' +
+          tipFieldsHtml() +
+          '<button class="primary" type="submit">Ajouter le conseil</button>' +
+          '</form>' +
+          '</div>' +
           '</div>'
         );
       })
@@ -484,6 +530,18 @@
     });
     Array.prototype.forEach.call(container.querySelectorAll('[data-kind="cancel-edit-item"]'), function (btn) {
       btn.addEventListener('click', function () { editingItemId = null; loadDays(); });
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('.tip-form'), function (form) {
+      form.addEventListener('submit', onAddTip);
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('.tip-edit-form'), function (form) {
+      form.addEventListener('submit', onSaveTip);
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="edit-tip"]'), function (btn) {
+      btn.addEventListener('click', function () { editingTipId = btn.dataset.id; loadDays(); });
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="cancel-edit-tip"]'), function (btn) {
+      btn.addEventListener('click', function () { editingTipId = null; loadDays(); });
     });
     wireDeleteButtons(container);
   }
@@ -590,6 +648,39 @@
       });
       if (insertRes.error) alert('Erreur : ' + insertRes.error.message);
     }
+    await loadDays();
+  }
+
+  async function onAddTip(e) {
+    e.preventDefault();
+    var form = e.target;
+    var dayId = form.dataset.dayId;
+    var countRes = await supabase.from('day_tips').select('id', { count: 'exact', head: true }).eq('day_id', dayId);
+    var res = await supabase.from('day_tips').insert({
+      day_id: dayId,
+      trip_id: currentTripId,
+      title: form.title.value.trim(),
+      description: form.description.value.trim() || null,
+      map_query: form.map_query.value.trim() || null,
+      sort_order: (countRes.count || 0) + 1,
+    });
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    await loadDays();
+  }
+
+  async function onSaveTip(e) {
+    e.preventDefault();
+    var form = e.target;
+    var res = await supabase
+      .from('day_tips')
+      .update({
+        title: form.title.value.trim(),
+        description: form.description.value.trim() || null,
+        map_query: form.map_query.value.trim() || null,
+      })
+      .eq('id', form.dataset.tipId);
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    editingTipId = null;
     await loadDays();
   }
 
@@ -784,12 +875,13 @@
         var table = {
           traveler: 'travelers', item: 'itinerary_items', day: 'itinerary_days', flight: 'flights',
           document: 'documents', esimguide: 'esim_guides', itemphoto: 'itinerary_item_photos',
+          daytip: 'day_tips',
         }[btn.dataset.kind];
         if (!table) return;
         var res = await supabase.from(table).delete().eq('id', btn.dataset.id);
         if (res.error) { alert('Erreur : ' + res.error.message); return; }
         if (table === 'travelers') await loadTravelers();
-        else if (table === 'itinerary_items' || table === 'itinerary_days' || table === 'itinerary_item_photos') await loadDays();
+        else if (table === 'itinerary_items' || table === 'itinerary_days' || table === 'itinerary_item_photos' || table === 'day_tips') await loadDays();
         else if (table === 'flights') await loadFlights();
         else if (table === 'documents') await loadDocuments();
         else if (table === 'esim_guides') await loadEsimGuides();
