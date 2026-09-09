@@ -10,8 +10,28 @@ window.MyCompanion = window.MyCompanion || {};
   function showGate(message) {
     var gate = document.getElementById('authGate');
     if (gate) gate.style.display = 'flex';
+    var form = document.getElementById('authForm');
+    var intro = document.getElementById('authIntro');
+    var loading = document.getElementById('authLoading');
+    if (form) form.style.display = '';
+    if (intro) intro.style.display = '';
+    if (loading) loading.style.display = 'none';
     var msgEl = document.getElementById('authMessage');
     if (msgEl) msgEl.textContent = message || '';
+  }
+
+  // Affiché entre "email reconnu" et "voyage réellement chargé" : sans
+  // ça, l'écran de connexion reste figé sur le formulaire pendant tout ce
+  // temps, sans aucun signe que quelque chose se passe.
+  function showGateLoading() {
+    var gate = document.getElementById('authGate');
+    if (gate) gate.style.display = 'flex';
+    var form = document.getElementById('authForm');
+    var intro = document.getElementById('authIntro');
+    var loading = document.getElementById('authLoading');
+    if (form) form.style.display = 'none';
+    if (intro) intro.style.display = 'none';
+    if (loading) loading.style.display = 'flex';
   }
 
   function hideGate() {
@@ -93,15 +113,18 @@ window.MyCompanion = window.MyCompanion || {};
       var traveler = await resolveTraveler(supabase, session.user);
       if (!traveler) {
         resolvedTraveler = null;
-        showGate("Aucun voyage associé à cet email pour l'instant. Contactez votre conciergerie.");
+        showGate("Aucun voyage associé à cet email pour l'instant. Contactez Alexia.");
         onReady(null);
         return;
       }
 
       resolvedTraveler = traveler;
       // On NE masque PAS l'écran de connexion ici : il reste affiché
-      // (couvrant le contenu de démo) jusqu'à ce que le voyage soit
-      // vraiment chargé et affiché — voir hideAuthGate() dans bootstrap.js.
+      // (couvrant le contenu de démo), mais bascule sur un indicateur de
+      // chargement plutôt que de rester figé sur le formulaire — jusqu'à
+      // ce que le voyage soit vraiment chargé et affiché, voir
+      // hideAuthGate() dans bootstrap.js.
+      showGateLoading();
       onReady(traveler);
     }
 

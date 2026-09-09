@@ -70,6 +70,39 @@
   déploiement de la fonction (étape différente du SQL Editor habituel,
   voir message de livraison de cette fonctionnalité pour la marche à
   suivre complète)
+- Audit UX (session du 9/9) : dix correctifs issus d'un passage en revue
+  complet de l'appli —
+  - Badge "message non lu" sur l'onglet Plus et la tuile "Message à
+    Alexia", effacé dès l'ouverture du chat (`travelers.last_message_read_at`,
+    fonction `mark_messages_read()`)
+  - L'écran Itinéraire s'ouvre désormais sur le jour du jour (au lieu de
+    toujours Jour 1), avec un repère visuel doré sur la pastille
+    d'aujourd'hui
+  - La demande de géolocalisation dans la fiche détail d'étape n'est plus
+    automatique : un bouton "Voir la distance" explicite la déclenche
+  - Chargement du voyage parallélisé (8 requêtes en même temps plutôt
+    qu'en série) + rafraîchissements ciblés après ajout d'une dépense ou
+    d'une photo (juste cette section, plus tout le voyage)
+  - Confirmation avant déconnexion
+  - Texte de la tuile Météo mis à jour (toutes les étapes, plus seulement
+    "aujourd'hui")
+  - "Conciergerie" remplacé par "Alexia" dans les textes voyageur (levée
+    de l'ambiguïté avec le rôle "Guide")
+  - Horodatage sous chaque message du chat
+  - Progression "Jour X/Y" sur l'écran d'accueil
+  - État de chargement ("Chargement de votre voyage...") entre la
+    connexion réussie et l'affichage effectif du voyage, au lieu d'un
+    écran de connexion figé sans retour visuel
+  - **Corrige au passage un bug introduit avec les rappels** : aucune
+    policy RLS ne permettait à un voyageur de modifier sa propre ligne
+    `travelers` une fois son invitation acceptée, donc le bouton "Activer
+    les rappels" ne sauvegardait en réalité jamais rien en base. Remplacé
+    par une fonction `set_reminder_prefs()` (SECURITY DEFINER, ne touche
+    que les colonnes utiles) plutôt qu'une policy UPDATE générale, qui
+    aurait permis à un voyageur de modifier n'importe quelle colonne de sa
+    ligne — y compris `trip_id` (rejoindre un autre voyage) ou `role`.
+    Migration `0013_unread_messages.sql` à exécuter (nécessaire même sans
+    s'intéresser au badge, pour que les rappels fonctionnent enfin)
 
 ## À faire
 

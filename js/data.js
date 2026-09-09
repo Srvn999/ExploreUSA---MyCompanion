@@ -7,50 +7,27 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
   var supabase = window.MyCompanion.client;
   if (!supabase || !tripId) return null;
 
-  var tripRes = await supabase.from('trips').select('*').eq('id', tripId).maybeSingle();
-
-  var daysRes = await supabase
-    .from('itinerary_days')
-    .select('*, itinerary_items(*), day_tips(*)')
-    .eq('trip_id', tripId)
-    .order('day_number');
-
-  var flightsRes = await supabase
-    .from('flights')
-    .select('*')
-    .eq('trip_id', tripId)
-    .order('sort_order');
-
-  var photosRes = await supabase
-    .from('photos')
-    .select('*')
-    .eq('trip_id', tripId)
-    .order('taken_at', { ascending: false });
-
-  var travelersRes = await supabase
-    .from('travelers')
-    .select('*')
-    .eq('trip_id', tripId);
-
-  var documentsRes = await supabase
-    .from('documents')
-    .select('*')
-    .eq('trip_id', tripId)
-    .order('created_at', { ascending: false });
-
-  var rentalCarRes = await supabase
-    .from('rental_cars')
-    .select('*')
-    .eq('trip_id', tripId)
-    .order('created_at')
-    .limit(1)
-    .maybeSingle();
-
-  var expensesRes = await supabase
-    .from('expenses')
-    .select('*')
-    .eq('trip_id', tripId)
-    .order('created_at', { ascending: false });
+  // Les 8 requêtes sont indépendantes : parties en parallèle plutôt qu'en
+  // série, le chargement initial (et chaque rafraîchissement complet) est
+  // nettement plus rapide, surtout sur une connexion moyenne en roaming.
+  var results = await Promise.all([
+    supabase.from('trips').select('*').eq('id', tripId).maybeSingle(),
+    supabase.from('itinerary_days').select('*, itinerary_items(*), day_tips(*)').eq('trip_id', tripId).order('day_number'),
+    supabase.from('flights').select('*').eq('trip_id', tripId).order('sort_order'),
+    supabase.from('photos').select('*').eq('trip_id', tripId).order('taken_at', { ascending: false }),
+    supabase.from('travelers').select('*').eq('trip_id', tripId),
+    supabase.from('documents').select('*').eq('trip_id', tripId).order('created_at', { ascending: false }),
+    supabase.from('rental_cars').select('*').eq('trip_id', tripId).order('created_at').limit(1).maybeSingle(),
+    supabase.from('expenses').select('*').eq('trip_id', tripId).order('created_at', { ascending: false }),
+  ]);
+  var tripRes = results[0];
+  var daysRes = results[1];
+  var flightsRes = results[2];
+  var photosRes = results[3];
+  var travelersRes = results[4];
+  var documentsRes = results[5];
+  var rentalCarRes = results[6];
+  var expensesRes = results[7];
 
   var firstError =
     tripRes.error || daysRes.error || flightsRes.error || photosRes.error ||
@@ -83,6 +60,31 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     rentalCar: rentalCarRes.data || null,
     expenses: expensesRes.data || [],
   };
+};
+
+// Rafraîchissements ciblés (dépenses, album) : évitent de refaire les 8
+// requêtes de fetchTripBundle juste après une petite action (ajouter une
+// dépense, une photo...), pour que ça reste réactif en roaming/wifi lent.
+window.MyCompanion.fetchExpensesAndTravelers = async function (tripId) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase || !tripId) return null;
+  var results = await Promise.all([
+    supabase.from('expenses').select('*').eq('trip_id', tripId).order('created_at', { ascending: false }),
+    supabase.from('travelers').select('*').eq('trip_id', tripId),
+  ]);
+  if (results[0].error || results[1].error) return null;
+  return { expenses: results[0].data || [], travelers: results[1].data || [] };
+};
+
+window.MyCompanion.fetchPhotosAndTravelers = async function (tripId) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase || !tripId) return null;
+  var results = await Promise.all([
+    supabase.from('photos').select('*').eq('trip_id', tripId).order('taken_at', { ascending: false }),
+    supabase.from('travelers').select('*').eq('trip_id', tripId),
+  ]);
+  if (results[0].error || results[1].error) return null;
+  return { photos: results[0].data || [], travelers: results[1].data || [] };
 };
 
 // Bibliothèque de tutos e-SIM, partagée entre tous les voyages (pas liée

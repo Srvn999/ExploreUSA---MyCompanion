@@ -82,10 +82,10 @@ window.MyCompanion = window.MyCompanion || {};
   async function savePrefs(enabled, leadMinutes) {
     var supabase = window.MyCompanion.client;
     if (!supabase || !currentTraveler) return;
-    var res = await supabase
-      .from('travelers')
-      .update({ reminders_enabled: enabled, reminder_lead_minutes: leadMinutes })
-      .eq('id', currentTraveler.id);
+    // Passe par une fonction RPC dédiée (set_reminder_prefs) plutôt qu'un
+    // update direct : un voyageur ne peut modifier que ces deux colonnes
+    // sur sa propre ligne, jamais trip_id/role/etc (voir migration 0013).
+    var res = await supabase.rpc('set_reminder_prefs', { p_enabled: enabled, p_lead_minutes: leadMinutes });
     if (!res.error) {
       currentTraveler.reminders_enabled = enabled;
       currentTraveler.reminder_lead_minutes = leadMinutes;

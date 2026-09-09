@@ -114,7 +114,15 @@ window.MyCompanion = window.MyCompanion || {};
     var nextLabelEl = document.getElementById('nextCardLabel');
     if (!eyebrowEl || !greetingEl || !nextCardEl) return;
 
-    eyebrowEl.textContent = trip ? (trip.name || trip.destination || 'Votre voyage') : 'Votre voyage';
+    var tripLabel = trip ? (trip.name || trip.destination || 'Votre voyage') : 'Votre voyage';
+    var todayIso = new Date().toISOString().slice(0, 10);
+    var sortedDays = (days || []).slice().sort(function (a, b) { return a.day_number - b.day_number; });
+    if (sortedDays.length) {
+      var currentDay = sortedDays[0];
+      sortedDays.forEach(function (d) { if (d.date && d.date <= todayIso) currentDay = d; });
+      tripLabel += ' · Jour ' + currentDay.day_number + '/' + sortedDays.length;
+    }
+    eyebrowEl.textContent = tripLabel;
     greetingEl.textContent = 'Bonjour ' + (traveler && traveler.display_name ? traveler.display_name : '');
 
     var upcoming = [];
@@ -130,7 +138,6 @@ window.MyCompanion = window.MyCompanion || {};
       return (a.item.time || '').localeCompare(b.item.time || '');
     });
 
-    var todayIso = new Date().toISOString().slice(0, 10);
     var next = upcoming.find(function (u) { return !u.day.date || u.day.date >= todayIso; }) || upcoming[0];
 
     if (!next) {
@@ -253,9 +260,19 @@ window.MyCompanion = window.MyCompanion || {};
       });
     }
 
+    // Par défaut, on ouvre le jour d'aujourd'hui plutôt que toujours le
+    // Jour 1 : le dernier jour dont la date n'est pas dans le futur (à
+    // défaut, le premier jour si le voyage n'a pas encore commencé).
+    var todayIso = new Date().toISOString().slice(0, 10);
+    var defaultIndex = 0;
+    sorted.forEach(function (d, i) {
+      if (d.date && d.date <= todayIso) defaultIndex = i;
+    });
+
     pillsEl.innerHTML = sorted
       .map(function (d, i) {
-        return '<div class="day-pill' + (i === 0 ? ' active' : '') + '" data-index="' + i + '">J' + d.day_number + '</div>';
+        var classes = 'day-pill' + (i === defaultIndex ? ' active' : '') + (d.date === todayIso ? ' today' : '');
+        return '<div class="' + classes + '" data-index="' + i + '">J' + d.day_number + '</div>';
       })
       .join('');
 
@@ -289,7 +306,7 @@ window.MyCompanion = window.MyCompanion || {};
       });
     }
 
-    renderDay(sorted[0]);
+    renderDay(sorted[defaultIndex]);
   };
 
   // ---- Fiche détail d'une étape (adresse, horaires, conseil d'Alexia,
@@ -325,9 +342,12 @@ window.MyCompanion = window.MyCompanion || {};
     }
 
     html +=
-      '<div class="item-detail-row" id="itemDetailDistanceRow" style="display:none;">' +
+      '<div class="item-detail-row">' +
       '<div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-7-7 18-3-8-8-3Z"/></svg></div>' +
-      '<div class="txt"><b>Distance</b><span id="itemDetailDistanceValue"></span></div></div>';
+      '<div class="txt"><b>Distance</b>' +
+      '<button type="button" id="itemDetailDistanceBtn" class="distance-btn">📍 Voir la distance jusqu\'ici</button>' +
+      '<span id="itemDetailDistanceValue" style="display:none;"></span>' +
+      '</div></div>';
 
     if (badges) html += '<div class="badges">' + badges + '</div>';
 
@@ -370,25 +390,39 @@ window.MyCompanion = window.MyCompanion || {};
       }
     });
 
-    // Distance depuis la position actuelle (si le visiteur autorise la
-    // géolocalisation et que le lieu de l'étape peut être géocodé).
-    var distRow = document.getElementById('itemDetailDistanceRow');
+    // Distance depuis la position actuelle : demandée seulement sur tap
+    // explicite, pas au chargement de la fiche — la géolocalisation
+    // déclenche une demande de permission, ça ne doit jamais surgir sans
+    // que le voyageur ait demandé quelque chose.
+    var distBtn = document.getElementById('itemDetailDistanceBtn');
     var distValue = document.getElementById('itemDetailDistanceValue');
-    if (distRow && distValue) {
-      Promise.all([
-        window.MyCompanion.getCurrentPosition(),
-        window.MyCompanion.geocodeLabel(item.address || mapQuery),
-      ]).then(function (res) {
-        var pos = res[0];
-        var place = res[1];
-        if (!pos || !place) return;
-        var km = window.MyCompanion.distanceKm(pos.lat, pos.lon, place.lat, place.lon);
-        distValue.textContent =
-          (km < 1
-            ? Math.round(km * 1000) + ' m'
-            : km.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' km') +
-          ' de votre position';
-        distRow.style.display = '';
+    if (distBtn && distValue) {
+      distBtn.addEventListener('click', function () {
+        distBtn.textContent = 'Recherche en cours...';
+        distBtn.disabled = true;
+        Promise.all([
+          window.MyCompanion.getCurrentPosition(),
+          window.MyCompanion.geocodeLabel(item.address || mapQuery),
+        ]).then(function (res) {
+          var pos = res[0];
+          var place = res[1];
+          if (!pos) {
+            distBtn.textContent = 'Position indisponible';
+            return;
+          }
+          if (!place) {
+            distBtn.textContent = 'Lieu introuvable';
+            return;
+          }
+          var km = window.MyCompanion.distanceKm(pos.lat, pos.lon, place.lat, place.lon);
+          distValue.textContent =
+            (km < 1
+              ? Math.round(km * 1000) + ' m'
+              : km.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' km') +
+            ' de votre position';
+          distValue.style.display = '';
+          distBtn.style.display = 'none';
+        });
       });
     }
   };
