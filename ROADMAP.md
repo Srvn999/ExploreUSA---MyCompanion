@@ -71,9 +71,8 @@
 ### Espace documents
 - ✅ Upload par Alexia depuis l'admin, catégorisation (passeport, ESTA,
   assurance, location, billet, autre)
-- Reste à faire côté client : un écran dans `index.html` pour que les
-  voyageurs consultent/téléchargent leurs documents (actuellement
-  uploadables uniquement, pas encore affichés côté client)
+- ✅ Écran côté client (tuile "Documents" dans Plus) : liste groupée par
+  catégorie, ouverture via URL signée temporaire
 
 ## Pour la prochaine session
 

@@ -11,6 +11,12 @@ window.MyCompanion = window.MyCompanion || {};
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/></svg>';
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
   var SWATCH_CLASSES = ['sw1', 'sw2', 'sw3', 'sw4', 'sw5'];
+  var CATEGORY_LABELS = {
+    passport: 'Passeport', esta: 'ESTA', insurance: 'Assurance',
+    rental: 'Location voiture', ticket: 'Billet', other: 'Document',
+  };
+  var DOC_ICON =
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>';
 
   function escapeHtml(str) {
     return String(str == null ? '' : str)
@@ -281,6 +287,51 @@ window.MyCompanion = window.MyCompanion || {};
         tile.style.backgroundImage = 'url("' + url + '")';
         tile.style.backgroundSize = 'cover';
         tile.style.backgroundPosition = 'center';
+      });
+    });
+  };
+
+  // ---- Documents ----
+  window.MyCompanion.renderDocuments = function (documents) {
+    var listEl = document.getElementById('documentsList');
+    if (!listEl) return;
+
+    if (!documents || !documents.length) {
+      listEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucun document pour l\'instant.</p>';
+      return;
+    }
+
+    var byCategory = {};
+    documents.forEach(function (d) {
+      (byCategory[d.category] = byCategory[d.category] || []).push(d);
+    });
+
+    listEl.innerHTML = Object.keys(byCategory)
+      .map(function (cat) {
+        var docs = byCategory[cat]
+          .map(function (d) {
+            return (
+              '<div class="doc-card" data-storage-path="' + escapeHtml(d.storage_path) + '">' +
+              '<div class="doc-ic">' + DOC_ICON + '</div>' +
+              '<div><h4>' + escapeHtml(d.title) + '</h4><p>Toucher pour ouvrir</p></div>' +
+              '</div>'
+            );
+          })
+          .join('');
+        return (
+          '<div class="doc-section">' +
+          '<div class="sec-title">' + (CATEGORY_LABELS[cat] || cat) + '</div>' +
+          docs +
+          '</div>'
+        );
+      })
+      .join('');
+
+    listEl.addEventListener('click', function (e) {
+      var card = e.target.closest('.doc-card');
+      if (!card) return;
+      window.MyCompanion.getDocumentSignedUrl(card.dataset.storagePath).then(function (url) {
+        if (url) window.open(url, '_blank');
       });
     });
   };

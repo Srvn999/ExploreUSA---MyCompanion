@@ -13,6 +13,7 @@
       window.MyCompanion.renderFlights(bundle.flights);
       window.MyCompanion.renderAlbum(bundle.days, bundle.photos, bundle.travelers);
       window.MyCompanion.renderAlbumPreview(bundle.photos);
+      window.MyCompanion.renderDocuments(bundle.documents);
       if (window.MyCompanion.initChat) window.MyCompanion.initChat(traveler.trip_id, traveler.id);
     } catch (err) {
       console.warn('[MyCompanion] Chargement du voyage impossible.', err);

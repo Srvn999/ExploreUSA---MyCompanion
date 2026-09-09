@@ -32,8 +32,14 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     .select('*')
     .eq('trip_id', tripId);
 
+  var documentsRes = await supabase
+    .from('documents')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: false });
+
   var firstError =
-    tripRes.error || daysRes.error || flightsRes.error || photosRes.error || travelersRes.error;
+    tripRes.error || daysRes.error || flightsRes.error || photosRes.error || travelersRes.error || documentsRes.error;
   if (firstError) {
     console.warn(
       '[MyCompanion] Erreur Supabase, contenu de démo conservé.',
@@ -58,7 +64,20 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
     flights: flightsRes.data || [],
     photos: photosRes.data || [],
     travelers: travelersRes.data || [],
+    documents: documentsRes.data || [],
   };
+};
+
+// Bucket 'trip-documents' privé -> URL signée à l'ouverture.
+window.MyCompanion.getDocumentSignedUrl = async function (storagePath) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase || !storagePath) return null;
+  var res = await supabase.storage.from('trip-documents').createSignedUrl(storagePath, 300);
+  if (res.error) {
+    console.warn('[MyCompanion] Erreur URL signée (document)', res.error);
+    return null;
+  }
+  return res.data.signedUrl;
 };
 
 // Visuel d'étape d'itinéraire (bucket 'trip-assets', privé lui aussi).
