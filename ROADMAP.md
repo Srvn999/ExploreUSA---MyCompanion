@@ -103,6 +103,14 @@
     ligne — y compris `trip_id` (rejoindre un autre voyage) ou `role`.
     Migration `0013_unread_messages.sql` à exécuter (nécessaire même sans
     s'intéresser au badge, pour que les rappels fonctionnent enfin)
+- Visionneuse de document intégrée : toucher une pièce jointe (Documents,
+  ou le contrat d'assurance dans Urgences) l'affiche désormais directement
+  dans l'appli (image ou PDF) au lieu d'ouvrir un nouvel onglet — dont le
+  comportement dépend du navigateur et pouvait forcer un téléchargement
+  plutôt qu'un aperçu rapide. Les formats non prévisualisables (Word...)
+  gardent un lien "Ouvrir le fichier". Le retour matériel/geste ferme la
+  visionneuse sans quitter l'écran en dessous (`#docViewer` dans
+  `index.html`, `openDocumentViewer` dans `js/render.js`)
 
 ## À faire
 

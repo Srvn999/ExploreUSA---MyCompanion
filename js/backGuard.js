@@ -42,6 +42,16 @@
   window.addEventListener('popstate', function (e) {
     var state = e.state;
 
+    // Visionneuse de document ouverte par-dessus l'écran courant (voir
+    // js/render.js → openDocumentViewer) : le retour la ferme simplement,
+    // sans toucher à l'écran en dessous ni déclencher la logique de sortie.
+    if (state && state.mcDocViewer) {
+      if (window.MyCompanion && window.MyCompanion.closeDocumentViewerSilent) {
+        window.MyCompanion.closeDocumentViewerSilent();
+      }
+      return;
+    }
+
     if (state && state.mcScreen) {
       if (window.showTab) window.showTab(state.mcScreen, state.mcSub, true);
       return;

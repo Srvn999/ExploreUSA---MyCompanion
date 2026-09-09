@@ -104,6 +104,65 @@ window.MyCompanion = window.MyCompanion || {};
     return timeStr ? String(timeStr).replace(':', 'h') : '';
   }
 
+  // ---- Visionneuse de document (image/PDF affichés dans l'appli plutôt
+  // que de compter sur le comportement — parfois un téléchargement forcé
+  // — d'un nouvel onglet du navigateur) ----
+  function guessDocKind(storagePath) {
+    var ext = String(storagePath || '').split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'].indexOf(ext) !== -1) return 'image';
+    if (ext === 'pdf') return 'pdf';
+    return 'other';
+  }
+
+  // Ferme visuellement la visionneuse — ne touche pas à l'historique.
+  // Appelé en réponse au retour matériel/geste (voir js/backGuard.js).
+  function closeDocumentViewerVisual() {
+    var overlay = document.getElementById('docViewer');
+    var bodyEl = document.getElementById('docViewerBody');
+    if (overlay) overlay.classList.remove('show');
+    if (bodyEl) bodyEl.innerHTML = ''; // stoppe le chargement d'un éventuel iframe PDF
+  }
+  window.MyCompanion.closeDocumentViewerSilent = closeDocumentViewerVisual;
+
+  // Fermeture manuelle (croix / clic hors de la fiche) : on consomme
+  // l'entrée d'historique empilée à l'ouverture plutôt que de la laisser
+  // traîner — le popstate qui en résulte appelle closeDocumentViewerVisual.
+  function closeDocumentViewer() {
+    history.back();
+  }
+
+  window.MyCompanion.openDocumentViewer = function (url, title, storagePath) {
+    var overlay = document.getElementById('docViewer');
+    var titleEl = document.getElementById('docViewerTitle');
+    var bodyEl = document.getElementById('docViewerBody');
+    if (!overlay || !bodyEl || !url) return;
+
+    titleEl.textContent = title || '';
+    var kind = guessDocKind(storagePath);
+    if (kind === 'image') {
+      bodyEl.innerHTML = '<img src="' + url + '" alt="">';
+    } else if (kind === 'pdf') {
+      bodyEl.innerHTML = '<iframe src="' + url + '"></iframe>';
+    } else {
+      bodyEl.innerHTML =
+        '<div class="doc-viewer-fallback">' +
+        "<p>Ce type de fichier ne peut pas s'afficher directement ici.</p>" +
+        '<a href="' + url + '" target="_blank" rel="noopener">Ouvrir le fichier</a>' +
+        '</div>';
+    }
+    overlay.classList.add('show');
+    history.pushState({ mcDocViewer: true }, '');
+  };
+
+  var docViewerCloseBtn = document.getElementById('docViewerClose');
+  var docViewerOverlayEl = document.getElementById('docViewer');
+  if (docViewerCloseBtn) docViewerCloseBtn.addEventListener('click', closeDocumentViewer);
+  if (docViewerOverlayEl) {
+    docViewerOverlayEl.addEventListener('click', function (e) {
+      if (e.target === docViewerOverlayEl) closeDocumentViewer();
+    });
+  }
+
   // ---- Accueil (salutation + prochaine étape) ----
   window.MyCompanion.renderHome = function (trip, traveler, days) {
     var eyebrowEl = document.getElementById('homeEyebrow');
@@ -590,7 +649,7 @@ window.MyCompanion = window.MyCompanion || {};
         var docs = byCategory[cat]
           .map(function (d) {
             return (
-              '<div class="doc-card" data-storage-path="' + escapeHtml(d.storage_path) + '">' +
+              '<div class="doc-card" data-storage-path="' + escapeHtml(d.storage_path) + '" data-title="' + escapeHtml(d.title) + '">' +
               '<div class="doc-ic">' + DOC_ICON + '</div>' +
               '<div><h4>' + escapeHtml(d.title) + '</h4><p>Toucher pour ouvrir</p></div>' +
               '</div>'
@@ -610,7 +669,7 @@ window.MyCompanion = window.MyCompanion || {};
       var card = e.target.closest('.doc-card');
       if (!card) return;
       window.MyCompanion.getDocumentSignedUrl(card.dataset.storagePath).then(function (url) {
-        if (url) window.open(url, '_blank');
+        if (url) window.MyCompanion.openDocumentViewer(url, card.dataset.title, card.dataset.storagePath);
       });
     });
   };
@@ -711,7 +770,7 @@ window.MyCompanion = window.MyCompanion || {};
     if (docTile) {
       docTile.addEventListener('click', function () {
         window.MyCompanion.getDocumentSignedUrl(docTile.dataset.storagePath).then(function (url) {
-          if (url) window.open(url, '_blank');
+          if (url) window.MyCompanion.openDocumentViewer(url, insuranceDoc.title, docTile.dataset.storagePath);
         });
       });
     }
