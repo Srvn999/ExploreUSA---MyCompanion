@@ -531,15 +531,36 @@ window.MyCompanion = window.MyCompanion || {};
       .join('');
 
     var geocodeCache = {};
+    var todayDate = new Date(todayIso);
+
     sorted.forEach(function (d) {
+      var row = listEl.querySelector('.weather-day-row[data-row-id="' + d.id + '"]');
+      if (!row) return;
+      var iconEl = row.querySelector('.wd-icon');
+      var tempsEl = row.querySelector('.wd-temps');
+
+      // Les prévisions météo (chez n'importe quel fournisseur) ne sont
+      // fiables qu'à ~16 jours. Au-delà, inutile d'appeler l'API : on
+      // l'indique clairement plutôt que d'afficher un "indisponible" qui
+      // ressemble à un bug.
+      if (d.date) {
+        var diffDays = Math.round((new Date(d.date) - todayDate) / 86400000);
+        if (diffDays > 16) {
+          iconEl.textContent = '🕐';
+          tempsEl.innerHTML = '<span>prévision à J-16</span>';
+          return;
+        }
+        if (diffDays < -92) {
+          iconEl.textContent = '—';
+          tempsEl.innerHTML = '<span>trop ancien</span>';
+          return;
+        }
+      }
+
       window.MyCompanion.getWeatherForDate(d.location_label, d.date, geocodeCache).then(function (weather) {
-        var row = listEl.querySelector('.weather-day-row[data-row-id="' + d.id + '"]');
-        if (!row) return;
-        var iconEl = row.querySelector('.wd-icon');
-        var tempsEl = row.querySelector('.wd-temps');
         if (!weather) {
           iconEl.textContent = '—';
-          tempsEl.innerHTML = '<span>indisponible</span>';
+          tempsEl.innerHTML = '<span>lieu introuvable</span>';
           return;
         }
         var codeInfo = WEATHER_CODES[weather.weatherCode] || ['🌡️', 'Météo'];
