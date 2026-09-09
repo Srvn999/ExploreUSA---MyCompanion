@@ -15,6 +15,9 @@
   var messagesChannel = null;
 
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
+  // Couleur du petit badge de type sur chaque étape, pour repérer d'un
+  // coup d'œil hôtel/activité/restaurant dans la liste d'un jour.
+  var TYPE_CLASSES = { hotel: 'type-hotel', activity: 'type-activity', restaurant: 'type-restaurant' };
   var CATEGORY_LABELS = {
     passport: 'Passeport', esta: 'ESTA', insurance: 'Assurance',
     rental: 'Location voiture', ticket: 'Billet', other: 'Autre',
@@ -458,9 +461,13 @@
             }
             return (
               '<div class="item-row">' +
-              '<div><b>' + (TYPE_LABELS[it.item_type] || it.item_type) + '</b> — ' + escapeHtml(it.title) +
-              '<div class="meta">' + escapeHtml(it.time) + (it.image_path ? ' · 🖼️ visuel' : '') + '</div></div>' +
-              '<span>' +
+              '<div class="item-time">' + escapeHtml(it.time) + '</div>' +
+              '<div class="item-body">' +
+              '<span class="item-type-badge ' + (TYPE_CLASSES[it.item_type] || '') + '">' + (TYPE_LABELS[it.item_type] || it.item_type) + '</span>' +
+              '<b>' + escapeHtml(it.title) + '</b>' +
+              (it.image_path ? '<div class="meta">🖼️ visuel</div>' : '') +
+              '</div>' +
+              '<span class="item-actions">' +
               '<button class="ghost" data-id="' + it.id + '" data-kind="edit-item">Modifier</button> ' +
               '<button class="danger" data-id="' + it.id + '" data-kind="item">Supprimer</button>' +
               '</span>' +
@@ -482,10 +489,10 @@
               );
             }
             return (
-              '<div class="item-row">' +
-              '<div><b>' + escapeHtml(t.title) + '</b>' +
+              '<div class="tip-row">' +
+              '<div class="item-body"><b>' + escapeHtml(t.title) + '</b>' +
               (t.description ? '<div class="meta">' + escapeHtml(t.description) + '</div>' : '') + '</div>' +
-              '<span>' +
+              '<span class="item-actions">' +
               '<button class="ghost" data-id="' + t.id + '" data-kind="edit-tip">Modifier</button> ' +
               '<button class="danger" data-id="' + t.id + '" data-kind="daytip">Supprimer</button>' +
               '</span>' +
@@ -496,15 +503,21 @@
 
         return (
           '<div class="day-block" data-day-id="' + day.id + '">' +
-          '<div class="day-head"><h4>Jour ' + day.day_number + (day.location_label ? ' · ' + escapeHtml(day.location_label) : '') + '</h4>' +
+          '<div class="day-head">' +
+          '<h4><span class="day-num">Jour ' + day.day_number + '</span>' +
+          (day.location_label ? '<span class="day-loc">' + escapeHtml(day.location_label) + '</span>' : '') +
+          '</h4>' +
           '<button class="danger" data-id="' + day.id + '" data-kind="day">Supprimer le jour</button></div>' +
-          itemsHtml +
-          '<form class="inline item-form" data-day-id="' + day.id + '" style="margin-top:10px;">' +
+          '<div class="day-items">' + itemsHtml + '</div>' +
+          '<div class="day-subsection">' +
+          '<div class="subsection-label">+ Ajouter une étape</div>' +
+          '<form class="inline item-form" data-day-id="' + day.id + '">' +
           itemFieldsHtml() +
           '<button class="primary" type="submit">Ajouter l\'étape</button>' +
           '</form>' +
-          '<div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);">' +
-          '<h4 style="font-size:13px;margin-bottom:8px;">💡 Conseils libres (temps libre, sans horaire ni réservation)</h4>' +
+          '</div>' +
+          '<div class="day-subsection tips-subsection">' +
+          '<div class="subsection-label">💡 Conseils libres (temps libre, sans horaire ni réservation)</div>' +
           tipsHtml +
           '<form class="inline tip-form" data-day-id="' + day.id + '" style="margin-top:8px;">' +
           tipFieldsHtml() +

@@ -111,6 +111,14 @@
   gardent un lien "Ouvrir le fichier". Le retour matériel/geste ferme la
   visionneuse sans quitter l'écran en dessous (`#docViewer` dans
   `index.html`, `openDocumentViewer` dans `js/render.js`)
+- Admin — itinéraire plus lisible : chaque jour a maintenant un fond
+  distinct (liseré terracotta, ombre légère, plus d'espace entre les
+  jours) avec un badge "Jour N" bien visible en en-tête. Chaque étape
+  affiche son horaire en évidence et un badge de couleur par type
+  (hôtel/activité/restaurant). Les formulaires "Ajouter une étape" et
+  "Conseils libres" sont isolés dans des encarts distincts avec un
+  intitulé, pour distinguer plus facilement "les étapes déjà là" de "ce
+  qu'on est en train d'ajouter"
 
 ## À faire
 
