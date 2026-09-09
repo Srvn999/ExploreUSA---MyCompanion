@@ -84,6 +84,26 @@ window.MyCompanion = window.MyCompanion || {};
     }
   }
 
+  // Pour un champ "date" seul (YYYY-MM-DD, sans heure ni fuseau) : on
+  // reconstruit la date en local plutôt que de passer par new Date(iso),
+  // qui interprète la chaîne comme minuit UTC et peut afficher la veille
+  // pour un voyageur aux États-Unis (fuseaux en retard sur UTC).
+  function formatLongDate(dateStr) {
+    if (!dateStr) return '';
+    var parts = String(dateStr).split('-');
+    if (parts.length !== 3) return dateStr;
+    try {
+      var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  function formatTimeFr(timeStr) {
+    return timeStr ? String(timeStr).replace(':', 'h') : '';
+  }
+
   // ---- Accueil (salutation + prochaine étape) ----
   window.MyCompanion.renderHome = function (trip, traveler, days) {
     var eyebrowEl = document.getElementById('homeEyebrow');
@@ -549,14 +569,16 @@ window.MyCompanion = window.MyCompanion || {};
     if (rentalCar.pickup_date) {
       rows.push([
         'Prise en charge',
-        [rentalCar.pickup_date, rentalCar.pickup_time].filter(Boolean).join(' à ') +
+        [formatLongDate(rentalCar.pickup_date), rentalCar.pickup_time ? 'à ' + formatTimeFr(rentalCar.pickup_time) : null]
+          .filter(Boolean).join(' ') +
           (rentalCar.pickup_location ? ' · ' + rentalCar.pickup_location : ''),
       ]);
     }
     if (rentalCar.return_date) {
       rows.push([
         'Retour',
-        [rentalCar.return_date, rentalCar.return_time].filter(Boolean).join(' à ') +
+        [formatLongDate(rentalCar.return_date), rentalCar.return_time ? 'à ' + formatTimeFr(rentalCar.return_time) : null]
+          .filter(Boolean).join(' ') +
           (rentalCar.return_location ? ' · ' + rentalCar.return_location : ''),
       ]);
     }
@@ -569,7 +591,7 @@ window.MyCompanion = window.MyCompanion || {};
       '<div class="rental-card"><h4>🚗 Voiture de location</h4>' +
       rows
         .map(function (r) {
-          return '<div class="rental-row"><span>' + escapeHtml(r[0]) + '</span><b>' + escapeHtml(r[1]) + '</b></div>';
+          return '<div class="rental-row"><span class="rlabel">' + escapeHtml(r[0]) + '</span><span class="rvalue">' + escapeHtml(r[1]) + '</span></div>';
         })
         .join('') +
       '</div>';
