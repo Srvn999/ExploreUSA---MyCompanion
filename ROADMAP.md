@@ -11,16 +11,26 @@
   documents
 - Messagerie client ↔ Alexia (chat en temps réel, voir `screen-chat` dans
   `index.html` et l'onglet Messages d'`admin.html`)
+- Connexion par voyageur (lien magique par email) : Alexia invite un
+  voyageur depuis l'onglet Voyageurs de l'admin, le voyageur reçoit un
+  email, clique, et son app s'ouvre directement sur son voyage
+  (`js/auth.js`, `#authGate` dans `index.html`)
+- Modification en place des étapes d'itinéraire depuis l'admin (plus
+  besoin de supprimer/recréer pour changer une heure, un titre, etc.)
 
 ## À faire
 
 ### Connexion & sécurité
-- Écran de connexion par voyageur (email / lien magique) pour Zoé, Cécile, Alexia
-- Retirer les règles de lecture/écriture publiques temporaires une fois la
-  connexion en place :
+- ✅ Connexion par voyageur (voir ci-dessus)
+- Retirer les règles de lecture/écriture publiques temporaires une fois
+  qu'on n'en a plus besoin pour les démos rapides :
   - `supabase/migrations/0002_demo_public_read.sql`
   - Les policies "demo public ..." de `0003_admin_and_messages.sql`
-  (le chat démo n'envoie actuellement qu'au nom de Zoé, en dur)
+- Attention au lien magique : par défaut Supabase attend qu'il soit ouvert
+  sur le même appareil/navigateur que celui utilisé pour le demander (flow
+  PKCE). Si des voyageurs se plaignent que le lien reçu sur leur téléphone
+  ne marche pas après une demande faite depuis l'admin, il faudra ajuster
+  ce réglage dans Supabase (Authentication → Settings)
 
 ### Appli installable (PWA)
 - Ajouter un logo/icône de l'appli
@@ -33,10 +43,18 @@
   historique multi-appareils une fois l'auth voyageur en place
 
 ### Page admin pour Alexia
-- ✅ Version de base (voir ci-dessus)
-- Reste à faire : édition d'une étape existante (aujourd'hui on peut
-  seulement ajouter/supprimer, pas modifier en place), réordonner les
-  étapes par glisser-déposer, page de connexion "mot de passe oublié"
+- ✅ Version de base + modification en place des étapes (voir ci-dessus)
+- Reste à faire : même modification en place pour les vols/voyageurs/jours
+  (aujourd'hui limités à ajouter/supprimer), réordonner les étapes par
+  glisser-déposer, page de connexion "mot de passe oublié"
+
+### Vols : saisie manuelle vs automatique
+- Actuellement 100% manuel (Alexia saisit tout : horaires, porte, statut)
+- Option à budgéter séparément : brancher une API de suivi de vols
+  (ex. AeroDataBox, FlightAware) pour qu'Alexia n'ait à saisir que le
+  numéro de vol + la date, et que le reste se mette à jour automatiquement
+  (changements de porte, retards...). Implique un abonnement à une API
+  externe, à choisir et budgéter avec l'utilisateur avant implémentation
 
 ### Voiture de location
 - Nouvelle section : compagnie, référence de réservation, dates de prise en

@@ -175,6 +175,7 @@
           <form class="inline" id="travelerForm">
             <div class="field"><label>Prénom</label><input type="text" name="display_name" placeholder="Zoé" required></div>
             <div class="field"><label>Identifiant court</label><input type="text" name="owner_slug" placeholder="zoe" required></div>
+            <div class="field"><label>Email</label><input type="email" name="email" placeholder="zoe@email.com"></div>
             <div class="field"><label>Rôle</label>
               <select name="role"><option value="member">Voyageur</option><option value="guide">Guide</option></select>
             </div>
@@ -183,7 +184,11 @@
         </div>
         <div class="card">
           <h3>Voyageurs</h3>
-          <table><thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th></th></tr></thead>
+          <p style="font-size:12.5px;color:#6b6656;">
+            "Envoyer le lien" déclenche l'email de connexion — le voyageur peut se
+            connecter tant qu'il n'y a pas cliqué (renvoie-le si besoin).
+          </p>
+          <table><thead><tr><th>Nom</th><th>Identifiant</th><th>Email</th><th>Rôle</th><th>Connexion</th><th></th></tr></thead>
           <tbody id="travelersTableBody"></tbody></table>
         </div>
       </section>

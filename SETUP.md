@@ -108,29 +108,33 @@ ne s'affiche dynamiquement que lorsque des lignes existent dans la table
 `photos` — tant qu'il n'y en a pas, le prototype garde les vignettes de
 démo.
 
-## 5. Authentification (accès par voyageur)
+## 5. Authentification par voyageur (lien magique)
 
-Pour que Zoé, Cécile et Alexia se connectent chacune à leur compte et ne
-voient que leur voyage :
+C'est fait ✅ — après avoir exécuté `0005_traveler_login.sql`, voici
+comment ça marche au quotidien :
 
-1. Dans Supabase, active **Authentication → Providers → Email** (ou
-   Magic Link, plus simple pour un usage familial : pas de mot de
-   passe à retenir).
-2. Crée un compte pour chaque voyageur (Authentication → Users → Invite),
-   ou laisse-les s'inscrire eux-mêmes.
-3. Lie chaque compte à sa ligne `travelers` : `update travelers set
-   user_id = '<uuid auth du compte>' where owner_slug = 'zoe';` (idem
-   pour cecile/alexia).
-4. Ajoute un écran de connexion (email + lien magique) avant d'appeler
-   `supabase.auth.signInWithOtp({ email })`. C'est la seule pièce qui
-   reste à construire dans l'UI — elle n'existait pas dans le
-   prototype statique.
+1. Dans l'admin (onglet **Voyageurs**), Alexia renseigne l'email du
+   voyageur (en plus de son prénom/identifiant).
+2. Elle clique sur **"Envoyer le lien"** dans la table : ça déclenche
+   l'email de connexion (`supabase.auth.signInWithOtp`), sans jamais
+   passer par un mot de passe.
+3. Le voyageur reçoit l'email, clique sur le lien **sur le même
+   appareil et le même navigateur** que celui qu'il utilisera ensuite
+   (important : Supabase utilise par défaut un flow qui lie le lien à
+   l'appareil d'origine).
+4. Il est automatiquement redirigé vers `index.html`, connecté, et son
+   compte est relié à sa ligne `travelers` (grâce à la policy "travelers
+   can claim their invite"). Son app s'ouvre directement sur son voyage.
 
-Sans authentification, la clé anonyme n'a accès à aucune ligne (RLS
-bloque tout par défaut) — c'est volontaire et sûr, mais ça veut dire que
-l'étape 4 ne montrera des données que si tu es connecté avec un compte
-lié à un `traveler`, ou si tu assouplis temporairement les policies
-pour tester en développement.
+Sans session valide, `index.html` affiche l'écran de connexion
+(`#authGate`) au lieu du contenu — c'est le comportement attendu dès que
+Supabase est configuré.
+
+**Dans Supabase, à vérifier une fois** : **Authentication → URL
+Configuration → Redirect URLs** doit contenir l'adresse de ton
+`index.html` en ligne (ex. `https://srvn999.github.io/ExploreUSA---MyCompanion/index.html`),
+sinon le clic sur le lien magique affichera une erreur "redirect not
+allowed".
 
 ## 6. Ajouter des photos
 

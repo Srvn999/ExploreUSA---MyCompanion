@@ -7,6 +7,7 @@
   var currentAdmin = null; // { user_id, display_name }
   var currentTripId = null;
   var currentTrip = null;
+  var editingItemId = null;
   var messagesChannel = null;
 
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
@@ -185,14 +186,32 @@
     if (res.error) { console.warn(res.error); return; }
     $('travelersTableBody').innerHTML = (res.data || [])
       .map(function (t) {
+        var loginStatus = t.user_id ? '✅ Connecté' : (t.email ? '⏳ Invité, en attente' : '—');
         return (
-          '<tr><td>' + escapeHtml(t.display_name) + '</td><td>' + escapeHtml(t.owner_slug) + '</td><td>' +
+          '<tr><td>' + escapeHtml(t.display_name) + '</td><td>' + escapeHtml(t.owner_slug) + '</td>' +
+          '<td>' + escapeHtml(t.email || '') + '</td><td>' +
           (t.role === 'guide' ? 'Guide' : 'Voyageur') + '</td>' +
-          '<td><button class="danger" data-id="' + t.id + '" data-kind="traveler">Supprimer</button></td></tr>'
+          '<td>' + loginStatus + '</td>' +
+          '<td>' +
+          (t.email && !t.user_id
+            ? '<button class="ghost" data-email="' + escapeHtml(t.email) + '" data-kind="invite">Envoyer le lien</button> '
+            : '') +
+          '<button class="danger" data-id="' + t.id + '" data-kind="traveler">Supprimer</button>' +
+          '</td></tr>'
         );
       })
       .join('');
     wireDeleteButtons($('travelersTableBody'));
+    Array.prototype.forEach.call($('travelersTableBody').querySelectorAll('[data-kind="invite"]'), function (btn) {
+      btn.addEventListener('click', function () { sendMagicLink(btn.dataset.email); });
+    });
+  }
+
+  async function sendMagicLink(email) {
+    var redirectTo = window.location.origin + window.location.pathname.replace(/admin\.html$/, 'index.html');
+    var res = await supabase.auth.signInWithOtp({ email: email, options: { emailRedirectTo: redirectTo } });
+    if (res.error) { alert("Erreur d'envoi : " + res.error.message); return; }
+    alert('Lien de connexion envoyé à ' + email + '.');
   }
 
   async function onAddTraveler(e) {
@@ -204,6 +223,7 @@
       trip_id: currentTripId,
       display_name: name,
       owner_slug: slug,
+      email: form.email.value.trim() || null,
       role: form.role.value,
       avatar_letter: name.charAt(0).toUpperCase(),
     });
@@ -215,6 +235,25 @@
   // ---------------------------------------------------------------
   // ITINÉRAIRE (jours + étapes)
   // ---------------------------------------------------------------
+
+  function itemFieldsHtml(defaults) {
+    var d = defaults || {};
+    var badgesValue = (d.badge_labels || []).join(', ');
+    return (
+      '<div class="field"><label>Heure</label><input type="time" name="time" required style="width:110px;" value="' + escapeHtml(d.time || '') + '"></div>' +
+      '<div class="field"><label>Type</label><select name="item_type">' +
+      ['hotel', 'activity', 'restaurant']
+        .map(function (t) {
+          return '<option value="' + t + '"' + (d.item_type === t ? ' selected' : '') + '>' + TYPE_LABELS[t] + '</option>';
+        })
+        .join('') +
+      '</select></div>' +
+      '<div class="field"><label>Titre</label><input type="text" name="title" placeholder="Cadillac Ranch" required value="' + escapeHtml(d.title || '') + '"></div>' +
+      '<div class="field"><label>Nom du lieu pour Maps</label><input type="text" name="map_query" placeholder="Cadillac Ranch, Amarillo TX" style="width:200px;" value="' + escapeHtml(d.map_query || '') + '"></div>' +
+      '<div class="field"><label>Badges (virgules)</label><input type="text" name="badges" placeholder="Payé ✓, Parking inclus" value="' + escapeHtml(badgesValue) + '"></div>' +
+      '<div class="field"><label>' + (d.image_path ? 'Remplacer le visuel' : 'Visuel (optionnel)') + '</label><input type="file" name="image" accept="image/*"></div>'
+    );
+  }
 
   async function loadDays() {
     var res = await supabase
@@ -230,11 +269,23 @@
         var items = (day.itinerary_items || []).slice().sort(function (a, b) { return a.sort_order - b.sort_order; });
         var itemsHtml = items
           .map(function (it) {
+            if (it.id === editingItemId) {
+              return (
+                '<form class="inline item-edit-form" data-item-id="' + it.id + '" style="margin-bottom:10px;">' +
+                itemFieldsHtml(it) +
+                '<button class="primary" type="submit">Enregistrer</button> ' +
+                '<button class="ghost" type="button" data-kind="cancel-edit-item">Annuler</button>' +
+                '</form>'
+              );
+            }
             return (
               '<div class="item-row">' +
               '<div><b>' + (TYPE_LABELS[it.item_type] || it.item_type) + '</b> — ' + escapeHtml(it.title) +
               '<div class="meta">' + escapeHtml(it.time) + (it.image_path ? ' · 🖼️ visuel' : '') + '</div></div>' +
+              '<span>' +
+              '<button class="ghost" data-id="' + it.id + '" data-kind="edit-item">Modifier</button> ' +
               '<button class="danger" data-id="' + it.id + '" data-kind="item">Supprimer</button>' +
+              '</span>' +
               '</div>'
             );
           })
@@ -246,14 +297,7 @@
           '<button class="danger" data-id="' + day.id + '" data-kind="day">Supprimer le jour</button></div>' +
           itemsHtml +
           '<form class="inline item-form" data-day-id="' + day.id + '" style="margin-top:10px;">' +
-          '<div class="field"><label>Heure</label><input type="time" name="time" required style="width:110px;"></div>' +
-          '<div class="field"><label>Type</label><select name="item_type">' +
-          '<option value="hotel">Hôtel</option><option value="activity">Activité</option><option value="restaurant">Restaurant</option>' +
-          '</select></div>' +
-          '<div class="field"><label>Titre</label><input type="text" name="title" placeholder="Cadillac Ranch" required></div>' +
-          '<div class="field"><label>Nom du lieu pour Maps</label><input type="text" name="map_query" placeholder="Cadillac Ranch, Amarillo TX" style="width:200px;"></div>' +
-          '<div class="field"><label>Badges (virgules)</label><input type="text" name="badges" placeholder="Payé ✓, Parking inclus"></div>' +
-          '<div class="field"><label>Visuel (optionnel)</label><input type="file" name="image" accept="image/*"></div>' +
+          itemFieldsHtml() +
           '<button class="primary" type="submit">Ajouter l\'étape</button>' +
           '</form>' +
           '</div>'
@@ -264,7 +308,44 @@
     Array.prototype.forEach.call(container.querySelectorAll('.item-form'), function (form) {
       form.addEventListener('submit', onAddItem);
     });
+    Array.prototype.forEach.call(container.querySelectorAll('.item-edit-form'), function (form) {
+      form.addEventListener('submit', onSaveItem);
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="edit-item"]'), function (btn) {
+      btn.addEventListener('click', function () { editingItemId = btn.dataset.id; loadDays(); });
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="cancel-edit-item"]'), function (btn) {
+      btn.addEventListener('click', function () { editingItemId = null; loadDays(); });
+    });
     wireDeleteButtons(container);
+  }
+
+  async function onSaveItem(e) {
+    e.preventDefault();
+    var form = e.target;
+    var itemId = form.dataset.itemId;
+    var badges = form.badges.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+
+    var payload = {
+      time: form.time.value.trim(),
+      item_type: form.item_type.value,
+      title: form.title.value.trim(),
+      map_query: form.map_query.value.trim() || null,
+      badge_labels: badges,
+    };
+
+    var file = form.image.files[0];
+    if (file) {
+      var imagePath = currentTripId + '/' + itemId + '/' + Date.now() + '-' + file.name;
+      var uploadRes = await supabase.storage.from('trip-assets').upload(imagePath, file);
+      if (uploadRes.error) { alert("Erreur d'envoi du visuel : " + uploadRes.error.message); return; }
+      payload.image_path = imagePath;
+    }
+
+    var res = await supabase.from('itinerary_items').update(payload).eq('id', itemId);
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    editingItemId = null;
+    await loadDays();
   }
 
   async function onAddDay(e) {

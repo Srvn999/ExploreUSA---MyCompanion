@@ -1,7 +1,5 @@
-// Fil de discussion client <-> Alexia. Tant que la connexion par
-// voyageur (voir ROADMAP.md) n'existe pas, on envoie les messages au nom
-// du premier voyageur "zoe" du voyage démo — la policy RLS temporaire de
-// 0003_admin_and_messages.sql n'autorise d'ailleurs que ça pour l'instant.
+// Fil de discussion client <-> Alexia, au nom du voyageur connecté
+// (résolu par auth.js).
 window.MyCompanion = window.MyCompanion || {};
 
 (function () {
@@ -25,14 +23,12 @@ window.MyCompanion = window.MyCompanion || {};
     threadEl.scrollTop = threadEl.scrollHeight;
   }
 
-  window.MyCompanion.initChat = async function (tripId, travelers) {
+  window.MyCompanion.initChat = async function (tripId, travelerId) {
     var supabase = window.MyCompanion.client;
-    if (!supabase || !tripId) return;
+    if (!supabase || !tripId || !travelerId) return;
 
-    var me = (travelers || []).find(function (t) { return t.owner_slug === 'zoe'; });
-    if (!me) return;
     currentTripId = tripId;
-    currentTravelerId = me.id;
+    currentTravelerId = travelerId;
 
     var res = await supabase.from('messages').select('*').eq('trip_id', tripId).order('created_at');
     if (!res.error) renderMessages(res.data || []);
