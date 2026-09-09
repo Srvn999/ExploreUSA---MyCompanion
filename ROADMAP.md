@@ -39,9 +39,13 @@
   dès qu'il y a plusieurs voyageurs à inviter le même jour
 
 ### Appli installable (PWA)
-- Ajouter un logo/icône de l'appli
-- Rendre l'appli installable sur l'écran d'accueil du téléphone (plein écran,
-  sans barre d'adresse) — pas besoin d'App Store / Play Store
+- ✅ Logo/icône (pin dégradé or/terracotta sur fond marine, cohérent avec
+  l'iconographie déjà utilisée dans l'appli), `manifest.json`, service
+  worker minimal (`sw.js`). Sur Android/Chrome, une bannière/le menu
+  propose "Ajouter à l'écran d'accueil" ou "Installer l'application" ; sur
+  iPhone/Safari, c'est manuel : Partager → "Sur l'écran d'accueil"
+  (Apple ne propose pas de bannière automatique, c'est une limite d'iOS,
+  pas de l'appli)
 
 ### Messagerie avec Alexia
 - ✅ Fil de discussion de base (voir ci-dessus)
