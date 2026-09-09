@@ -53,6 +53,23 @@
   l'écran Itinéraire (`js/render.js` → section `.day-tips` dans
   `renderItinerary`). Migration `0011_day_tips.sql` à exécuter (nouvelle
   table `day_tips`)
+- Rappels par notification push avant l'heure d'une étape ("dans 30 min :
+  Cadillac Ranch"), activables/désactivables à volonté par le voyageur
+  (tuile "Rappels" dans Plus, `#screen-reminders`), avec un délai
+  configurable (15/30/60 min). Fonctionne même appli fermée/téléphone
+  verrouillé — nécessite une pièce en plus du schéma habituel : une
+  fonction serveur (`supabase/functions/send-itinerary-reminders`)
+  appelée toutes les ~5 min par une tâche planifiée (pg_cron + pg_net),
+  qui envoie la notification via Web Push (clés VAPID). Le fuseau horaire
+  de chaque jour est déduit à la volée du lieu (`location_label`, via le
+  même géocodage gratuit que la météo/les taxes) pour convertir l'heure
+  locale de l'étape en heure réelle d'envoi — indispensable sur un
+  roadtrip qui traverse plusieurs fuseaux. Migration `0012_reminders.sql`
+  à exécuter (colonnes `reminders_enabled`/`reminder_lead_minutes` sur
+  `travelers`, tables `push_subscriptions` et `sent_reminders`) +
+  déploiement de la fonction (étape différente du SQL Editor habituel,
+  voir message de livraison de cette fonctionnalité pour la marche à
+  suivre complète)
 
 ## À faire
 
@@ -161,6 +178,24 @@
   n'est pas géocodable, la ligne "Distance" reste simplement masquée
 - Champs vides (pas d'adresse/horaires/conseil/photo) : la ligne
   correspondante n'apparaît juste pas sur la fiche, rien d'inventé
+
+### Rappels (notifications push)
+- ✅ Toggle + délai (15/30/60 min) côté voyageur, abonnement Web Push
+  (`js/reminders.js`), fonction serveur programmée (voir ci-dessus)
+- À vérifier après le premier déploiement de la fonction : l'import
+  `npm:web-push` fonctionne dans la majorité des cas sur les fonctions
+  Supabase (runtime Deno avec compatibilité npm), mais c'est le point le
+  plus susceptible de coincer techniquement. Si le déploiement échoue à
+  cause de cet import, la solution de repli est une implémentation du
+  protocole Web Push "à la main" (JWT VAPID + chiffrement du payload)
+  sans dépendance npm — plus de code, mais zéro dépendance externe
+- Pas encore de contrôle fin par étape ("je veux le rappel pour le
+  restaurant mais pas pour l'hôtel") : c'est un réglage global par
+  voyageur pour l'instant. À ajouter facilement plus tard si le besoin se
+  confirme (une case à cocher par étape, en plus du réglage global)
+- Le clic sur la notification rouvre/focus l'appli à l'écran où elle
+  était, pas directement sur la fiche détail de l'étape concernée (pas de
+  deep-link pour l'instant)
 
 ## Pour la prochaine session
 

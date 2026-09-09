@@ -33,6 +33,7 @@
         window.MyCompanion.initExpenses(traveler.trip_id, function () { return loadTravelerTrip(traveler); });
       }
       if (window.MyCompanion.initChat) window.MyCompanion.initChat(traveler.trip_id, traveler.id);
+      if (window.MyCompanion.initReminders) window.MyCompanion.initReminders(traveler);
 
       window.MyCompanion.getTripPhotoStorageBytes(traveler.trip_id, bundle.travelers).then(function (bytes) {
         window.MyCompanion.renderAlbumStorage(bytes);
