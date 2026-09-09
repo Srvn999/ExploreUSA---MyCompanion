@@ -8,6 +8,7 @@
   var currentTripId = null;
   var currentTrip = null;
   var editingItemId = null;
+  var editingTravelerId = null;
   var messagesChannel = null;
 
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
@@ -186,6 +187,22 @@
     if (res.error) { console.warn(res.error); return; }
     $('travelersTableBody').innerHTML = (res.data || [])
       .map(function (t) {
+        if (t.id === editingTravelerId) {
+          return (
+            '<tr><td colspan="6">' +
+            '<form class="inline traveler-edit-form" data-traveler-id="' + t.id + '">' +
+            '<div class="field"><label>Prénom</label><input type="text" name="display_name" required value="' + escapeHtml(t.display_name) + '"></div>' +
+            '<div class="field"><label>Identifiant court</label><input type="text" name="owner_slug" required value="' + escapeHtml(t.owner_slug) + '"></div>' +
+            '<div class="field"><label>Email</label><input type="email" name="email" value="' + escapeHtml(t.email || '') + '"></div>' +
+            '<div class="field"><label>Rôle</label><select name="role">' +
+            '<option value="member"' + (t.role === 'member' ? ' selected' : '') + '>Voyageur</option>' +
+            '<option value="guide"' + (t.role === 'guide' ? ' selected' : '') + '>Guide</option>' +
+            '</select></div>' +
+            '<button class="primary" type="submit">Enregistrer</button> ' +
+            '<button class="ghost" type="button" data-kind="cancel-edit-traveler">Annuler</button>' +
+            '</form></td></tr>'
+          );
+        }
         var loginStatus = t.user_id ? '✅ Connecté' : (t.email ? '⏳ Invité, en attente' : '—');
         return (
           '<tr><td>' + escapeHtml(t.display_name) + '</td><td>' + escapeHtml(t.owner_slug) + '</td>' +
@@ -196,6 +213,7 @@
           (t.email && !t.user_id
             ? '<button class="ghost" data-email="' + escapeHtml(t.email) + '" data-kind="invite">Envoyer le lien</button> '
             : '') +
+          '<button class="ghost" data-id="' + t.id + '" data-kind="edit-traveler">Modifier</button> ' +
           '<button class="danger" data-id="' + t.id + '" data-kind="traveler">Supprimer</button>' +
           '</td></tr>'
         );
@@ -204,6 +222,15 @@
     wireDeleteButtons($('travelersTableBody'));
     Array.prototype.forEach.call($('travelersTableBody').querySelectorAll('[data-kind="invite"]'), function (btn) {
       btn.addEventListener('click', function () { sendMagicLink(btn.dataset.email); });
+    });
+    Array.prototype.forEach.call($('travelersTableBody').querySelectorAll('[data-kind="edit-traveler"]'), function (btn) {
+      btn.addEventListener('click', function () { editingTravelerId = btn.dataset.id; loadTravelers(); });
+    });
+    Array.prototype.forEach.call($('travelersTableBody').querySelectorAll('[data-kind="cancel-edit-traveler"]'), function (btn) {
+      btn.addEventListener('click', function () { editingTravelerId = null; loadTravelers(); });
+    });
+    Array.prototype.forEach.call($('travelersTableBody').querySelectorAll('.traveler-edit-form'), function (form) {
+      form.addEventListener('submit', onSaveTraveler);
     });
   }
 
@@ -229,6 +256,20 @@
     });
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
     form.reset();
+    await loadTravelers();
+  }
+
+  async function onSaveTraveler(e) {
+    e.preventDefault();
+    var form = e.target;
+    var res = await supabase.from('travelers').update({
+      display_name: form.display_name.value.trim(),
+      owner_slug: form.owner_slug.value.trim(),
+      email: form.email.value.trim() || null,
+      role: form.role.value,
+    }).eq('id', form.dataset.travelerId);
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    editingTravelerId = null;
     await loadTravelers();
   }
 
