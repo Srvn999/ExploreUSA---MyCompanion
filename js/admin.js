@@ -10,6 +10,7 @@
   var editingItemId = null;
   var editingTravelerId = null;
   var currentRentalCarId = null;
+  var editingEsimGuideId = null;
   var messagesChannel = null;
 
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
@@ -43,7 +44,10 @@
 
     $('loginForm').addEventListener('submit', onLoginSubmit);
     $('logoutBtn').addEventListener('click', onLogout);
-    $('newTripBtn').addEventListener('click', function () { $('newTripCard').hidden = false; });
+    $('newTripBtn').addEventListener('click', function () {
+      $('esimGuidesPanel').hidden = true;
+      $('newTripCard').hidden = false;
+    });
     $('cancelNewTrip').addEventListener('click', function () { $('newTripCard').hidden = true; });
     $('newTripForm').addEventListener('submit', onCreateTrip);
     $('newTripForm').start_date.addEventListener('change', function () {
@@ -60,6 +64,8 @@
     $('rentalCarForm').addEventListener('submit', onSaveRentalCar);
     $('documentForm').addEventListener('submit', onAddDocument);
     $('adminChatForm').addEventListener('submit', onSendAdminMessage);
+    $('esimGuidesBtn').addEventListener('click', showEsimGuidesPanel);
+    $('esimGuideForm').addEventListener('submit', onAddEsimGuide);
 
     Array.prototype.forEach.call(document.querySelectorAll('.tab-btn'), function (btn) {
       btn.addEventListener('click', function () { switchTab(btn.dataset.tab); });
@@ -155,6 +161,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('.trip-item'), function (el) {
       el.classList.toggle('active', el.dataset.tripId === tripId);
     });
+    $('esimGuidesPanel').hidden = true;
     $('noTripSelected').hidden = true;
     $('tripEditor').hidden = false;
 
@@ -678,7 +685,10 @@
     Array.prototype.forEach.call(scopeEl.querySelectorAll('button.danger'), function (btn) {
       btn.addEventListener('click', async function () {
         if (!confirm('Confirmer la suppression ?')) return;
-        var table = { traveler: 'travelers', item: 'itinerary_items', day: 'itinerary_days', flight: 'flights', document: 'documents' }[btn.dataset.kind];
+        var table = {
+          traveler: 'travelers', item: 'itinerary_items', day: 'itinerary_days', flight: 'flights',
+          document: 'documents', esimguide: 'esim_guides',
+        }[btn.dataset.kind];
         if (!table) return;
         var res = await supabase.from(table).delete().eq('id', btn.dataset.id);
         if (res.error) { alert('Erreur : ' + res.error.message); return; }
@@ -686,8 +696,90 @@
         else if (table === 'itinerary_items' || table === 'itinerary_days') await loadDays();
         else if (table === 'flights') await loadFlights();
         else if (table === 'documents') await loadDocuments();
+        else if (table === 'esim_guides') await loadEsimGuides();
       });
     });
+  }
+
+  // ---------------------------------------------------------------
+  // GUIDES E-SIM (bibliothèque partagée, indépendante d'un voyage)
+  // ---------------------------------------------------------------
+
+  function showEsimGuidesPanel() {
+    Array.prototype.forEach.call(document.querySelectorAll('.trip-item'), function (el) {
+      el.classList.remove('active');
+    });
+    currentTripId = null;
+    $('noTripSelected').hidden = true;
+    $('tripEditor').hidden = true;
+    $('esimGuidesPanel').hidden = false;
+    loadEsimGuides();
+  }
+
+  async function loadEsimGuides() {
+    var res = await supabase.from('esim_guides').select('*').order('sort_order').order('brand');
+    if (res.error) { console.warn(res.error); return; }
+    var container = $('esimGuidesList');
+    container.innerHTML = (res.data || [])
+      .map(function (g) {
+        if (g.id === editingEsimGuideId) {
+          return (
+            '<div class="card"><form class="inline esim-edit-form" data-guide-id="' + g.id + '">' +
+            '<div class="field"><label>Marque</label><input type="text" name="brand" required value="' + escapeHtml(g.brand) + '"></div>' +
+            '<div class="field"><label>Emoji</label><input type="text" name="logo_emoji" maxlength="4" style="width:70px;" value="' + escapeHtml(g.logo_emoji || '') + '"></div>' +
+            '<div class="field" style="flex:1 1 100%;"><label>Étapes (une par ligne)</label>' +
+            '<textarea name="steps" rows="5" style="width:100%;font-family:\'Manrope\';font-size:14px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);">' + escapeHtml(g.steps || '') + '</textarea></div>' +
+            '<button class="primary" type="submit">Enregistrer</button> ' +
+            '<button class="ghost" type="button" data-kind="cancel-edit-esimguide">Annuler</button>' +
+            '</form></div>'
+          );
+        }
+        var stepCount = (g.steps || '').split('\n').filter(function (s) { return s.trim(); }).length;
+        return (
+          '<div class="item-row"><div><b>' + (g.logo_emoji ? escapeHtml(g.logo_emoji) + ' ' : '') + escapeHtml(g.brand) + '</b>' +
+          '<div class="meta">' + stepCount + ' étape(s)</div></div>' +
+          '<span><button class="ghost" data-id="' + g.id + '" data-kind="edit-esimguide">Modifier</button> ' +
+          '<button class="danger" data-id="' + g.id + '" data-kind="esimguide">Supprimer</button></span></div>'
+        );
+      })
+      .join('') || '<p class="meta">Aucune marque pour l\'instant.</p>';
+
+    Array.prototype.forEach.call(container.querySelectorAll('.esim-edit-form'), function (form) {
+      form.addEventListener('submit', onSaveEsimGuide);
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="edit-esimguide"]'), function (btn) {
+      btn.addEventListener('click', function () { editingEsimGuideId = btn.dataset.id; loadEsimGuides(); });
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="cancel-edit-esimguide"]'), function (btn) {
+      btn.addEventListener('click', function () { editingEsimGuideId = null; loadEsimGuides(); });
+    });
+    wireDeleteButtons(container);
+  }
+
+  async function onAddEsimGuide(e) {
+    e.preventDefault();
+    var form = e.target;
+    var res = await supabase.from('esim_guides').insert({
+      brand: form.brand.value.trim(),
+      logo_emoji: form.logo_emoji.value.trim() || null,
+      steps: form.steps.value.trim(),
+    });
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    form.reset();
+    await loadEsimGuides();
+  }
+
+  async function onSaveEsimGuide(e) {
+    e.preventDefault();
+    var form = e.target;
+    var res = await supabase.from('esim_guides').update({
+      brand: form.brand.value.trim(),
+      logo_emoji: form.logo_emoji.value.trim() || null,
+      steps: form.steps.value.trim(),
+    }).eq('id', form.dataset.guideId);
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    editingEsimGuideId = null;
+    await loadEsimGuides();
   }
 
   document.addEventListener('DOMContentLoaded', init);

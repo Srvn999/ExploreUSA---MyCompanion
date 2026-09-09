@@ -85,6 +85,19 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
   };
 };
 
+// Bibliothèque de tutos e-SIM, partagée entre tous les voyages (pas liée
+// à un trip_id).
+window.MyCompanion.fetchEsimGuides = async function () {
+  var supabase = window.MyCompanion.client;
+  if (!supabase) return [];
+  var res = await supabase.from('esim_guides').select('*').order('sort_order').order('brand');
+  if (res.error) {
+    console.warn('[MyCompanion] Erreur chargement guides e-SIM', res.error);
+    return [];
+  }
+  return res.data || [];
+};
+
 window.MyCompanion.addExpense = async function (params) {
   var supabase = window.MyCompanion.client;
   if (!supabase) throw new Error('Supabase non configuré');

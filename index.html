@@ -920,12 +920,44 @@
   </div>
 
   <!-- E-SIM -->
+  <!-- E-SIM : SÉLECTION DE LA MARQUE -->
   <div class="screen" id="screen-esim">
     <div class="album-header">
       <div class="back-arrow" onclick="showTab('accueil')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
       </div>
-      <h1 style="font-size:20px;">Installer ma e-SIM</h1>
+      <h1 style="font-size:20px;">Quelle est votre e-SIM ?</h1>
+    </div>
+    <p class="esim-intro">Choisissez la marque de votre e-SIM pour voir le tuto adapté.</p>
+    <div id="esimBrandList"></div>
+    <div class="plus-tile" style="cursor:pointer;" onclick="showTab('esim-generic')">
+      <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+      <h4>Ma marque n'est pas dans la liste</h4>
+      <p>Voir la méthode générale (iOS / Android)</p>
+    </div>
+  </div>
+
+  <!-- E-SIM : TUTO D'UNE MARQUE -->
+  <div class="screen" id="screen-esim-guide">
+    <div class="album-header">
+      <div class="back-arrow" onclick="showTab('esim')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;" id="esimGuideTitle">e-SIM</h1>
+    </div>
+    <div id="esimGuideSteps"></div>
+    <p class="esim-help">
+      Un souci d'installation ? <a href="#" onclick="showTab('chat');return false;">Écrivez à Alexia</a>.
+    </p>
+  </div>
+
+  <!-- E-SIM : METHODE GENERALE (repli, statique, hors-ligne) -->
+  <div class="screen" id="screen-esim-generic">
+    <div class="album-header">
+      <div class="back-arrow" onclick="showTab('esim')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Méthode générale</h1>
     </div>
     <p class="esim-intro">
       Ce guide reste consultable même sans connexion — installez votre e-SIM

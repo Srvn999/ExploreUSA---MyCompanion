@@ -23,6 +23,10 @@
       window.MyCompanion.renderUrgences(bundle.trip, bundle.documents);
       window.MyCompanion.renderWeather(bundle.days);
       window.MyCompanion.renderStateTaxOptions(bundle.days);
+
+      window.MyCompanion.fetchEsimGuides().then(function (guides) {
+        window.MyCompanion.renderEsimBrandList(guides);
+      });
       window.MyCompanion.renderExpenses(bundle.expenses, bundle.travelers);
       if (window.MyCompanion.initExpenses) {
         window.MyCompanion.initExpenses(traveler.trip_id, function () { return loadTravelerTrip(traveler); });

@@ -651,4 +651,50 @@ window.MyCompanion = window.MyCompanion || {};
 
     if (window.computeTip) window.computeTip();
   };
+
+  // ---- Guides e-SIM ----
+  window.MyCompanion.renderEsimBrandList = function (guides) {
+    var listEl = document.getElementById('esimBrandList');
+    if (!listEl) return;
+
+    listEl.innerHTML = (guides || [])
+      .map(function (g) {
+        return (
+          '<div class="doc-card" data-guide-id="' + g.id + '">' +
+          '<div class="doc-ic">' + (g.logo_emoji ? escapeHtml(g.logo_emoji) : '📶') + '</div>' +
+          '<div><h4>' + escapeHtml(g.brand) + '</h4><p>Voir le tuto</p></div>' +
+          '</div>'
+        );
+      })
+      .join('');
+
+    if (!listEl.dataset.wired) {
+      listEl.dataset.wired = '1';
+      listEl.addEventListener('click', function (e) {
+        var card = e.target.closest('.doc-card[data-guide-id]');
+        if (!card) return;
+        var guide = (guides || []).find(function (g) { return g.id === card.dataset.guideId; });
+        if (!guide) return;
+        window.MyCompanion.renderEsimGuide(guide);
+        if (window.showTab) window.showTab('esim-guide');
+      });
+    }
+  };
+
+  window.MyCompanion.renderEsimGuide = function (guide) {
+    var titleEl = document.getElementById('esimGuideTitle');
+    var stepsEl = document.getElementById('esimGuideSteps');
+    if (!titleEl || !stepsEl || !guide) return;
+
+    titleEl.textContent = (guide.logo_emoji ? guide.logo_emoji + ' ' : '') + guide.brand;
+
+    var steps = (guide.steps || '').split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    stepsEl.innerHTML = steps.length
+      ? steps
+          .map(function (s, i) {
+            return '<div class="esim-step"><div class="esim-num">' + (i + 1) + '</div><div><p>' + escapeHtml(s) + '</p></div></div>';
+          })
+          .join('')
+      : '<p style="color:#8a8470;font-size:13px;">Pas encore de détail pour cette marque — contactez Alexia.</p>';
+  };
 })();

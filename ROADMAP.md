@@ -82,10 +82,15 @@
   confiance, pas de restriction "ses propres dépenses uniquement")
 
 ### e-SIM
-- ✅ Guide pas-à-pas générique (iOS + Android), tuile "Installer ma
-  e-SIM" dans Plus. Entièrement statique — fonctionne hors-ligne dès
-  que l'appli a été ouverte une fois (mise en cache par le service
-  worker comme le reste de l'appli)
+- ✅ Sélecteur de marque (Holafly, Airalo...) → tuto spécifique par
+  marque, rédigé et tenu à jour par Alexia depuis l'admin (nouveau
+  bouton "📶 Guides e-SIM", bibliothèque partagée entre tous les
+  voyages — pas propre à un trip). Fallback "méthode générale"
+  (iOS/Android) toujours disponible et 100% statique/hors-ligne pour
+  les marques non listées
+- Volontairement pas de tuto pré-rempli par marque commerciale précise
+  (Holafly, Airalo...) : leur fonctionnement change et une étape fausse
+  peut coûter un jour de forfait au client — à Alexia de rédiger/valider
 
 ### Météo du jour
 - ✅ Écran dédié, via Open-Meteo (gratuit, sans clé) : géocode le lieu de
