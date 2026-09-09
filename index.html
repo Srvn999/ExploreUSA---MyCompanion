@@ -460,6 +460,19 @@
   .expense-row button{
     border:none; background:none; color:var(--terracotta-dark); font-size:15px; cursor:pointer; padding:2px 4px;
   }
+  .esim-intro{ font-size:13px; color:#5b5748; margin-bottom:18px; line-height:1.5; }
+  .esim-step{
+    display:flex; gap:12px; background:var(--white); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px;
+  }
+  .esim-num{
+    width:26px; height:26px; flex-shrink:0; border-radius:50%; background:var(--terracotta); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px;
+  }
+  .esim-step h4{ font-size:13.5px; font-weight:700; color:var(--navy); margin:0 0 3px; }
+  .esim-step p{ font-size:12px; color:#6b6656; margin:0; line-height:1.4; }
+  .esim-step a, .esim-help a{ color:var(--terracotta-dark); font-weight:700; text-decoration:underline; }
+  .esim-help{ text-align:center; font-size:12.5px; color:#8a8470; margin-top:16px; }
   .back-toast{
     position:absolute; left:50%; bottom:100px; transform:translateX(-50%) translateY(10px);
     background:var(--navy); color:#fff; font-family:'Manrope'; font-size:12.5px; font-weight:700;
@@ -653,6 +666,7 @@
             <option value="0.06">Floride — 6 %</option>
             <option value="0">Autre / pas de taxe</option>
           </select>
+          <p id="stateTaxHint" style="font-size:11px; color:#8a8470; margin:4px 0 0;">Taux indicatif (moyenne État + taxes locales) — vérifiez sur votre ticket</p>
         </div>
         <div class="field-row">
           <label>Niveau de satisfaction</label>
@@ -758,6 +772,11 @@
         <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <h4>Frais partagés</h4>
         <p>Cagnotte de groupe pour un voyage à plusieurs</p>
+      </div>
+      <div class="plus-tile" onclick="showTab('esim')" style="cursor:pointer;">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M6 18h12"/></svg>
+        <h4>Installer ma e-SIM</h4>
+        <p>Guide pas-à-pas, consultable sans connexion</p>
       </div>
     </div>
     <p class="caption" style="cursor:pointer; text-decoration:underline;" onclick="if(window.MyCompanion&&window.MyCompanion.signOut)window.MyCompanion.signOut();">Se déconnecter</p>
@@ -898,6 +917,73 @@
       <button type="submit">Ajouter</button>
     </form>
     <div id="expensesList"></div>
+  </div>
+
+  <!-- E-SIM -->
+  <div class="screen" id="screen-esim">
+    <div class="album-header">
+      <div class="back-arrow" onclick="showTab('accueil')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Installer ma e-SIM</h1>
+    </div>
+    <p class="esim-intro">
+      Ce guide reste consultable même sans connexion — installez votre e-SIM
+      avant le départ, idéalement en wifi.
+    </p>
+
+    <div class="esim-step">
+      <div class="esim-num">1</div>
+      <div><h4>Vérifiez la compatibilité</h4>
+        <p>La plupart des iPhone (XS et plus récents) et Android récents (Pixel 3+, Galaxy S20+...) acceptent les e-SIM.</p>
+      </div>
+    </div>
+    <div class="esim-step">
+      <div class="esim-num">2</div>
+      <div><h4>Récupérez votre QR code</h4>
+        <p>Reçu par email, ou transmis par Alexia dans l'onglet <a href="#" onclick="showTab('documents');return false;">Documents</a>.</p>
+      </div>
+    </div>
+    <div class="esim-step">
+      <div class="esim-num">3</div>
+      <div><h4>Sur iPhone</h4>
+        <p>Réglages → Forfait cellulaire → Ajouter un forfait cellulaire → Utiliser le code QR.</p>
+      </div>
+    </div>
+    <div class="esim-step">
+      <div class="esim-num">4</div>
+      <div><h4>Sur Android</h4>
+        <p>Paramètres → Réseau et internet → SIM → Télécharger une SIM → scanner le code QR.</p>
+      </div>
+    </div>
+    <div class="esim-step">
+      <div class="esim-num">5</div>
+      <div><h4>Nommez la ligne</h4>
+        <p>Par exemple "USA", pour la reconnaître facilement dans vos réglages.</p>
+      </div>
+    </div>
+    <div class="esim-step">
+      <div class="esim-num">6</div>
+      <div><h4>Activez l'itinérance des données</h4>
+        <p>Sans ça, la e-SIM ne captera pas de réseau une fois sur place.</p>
+      </div>
+    </div>
+    <div class="esim-step">
+      <div class="esim-num">7</div>
+      <div><h4>Définissez la e-SIM comme ligne de données</h4>
+        <p>Gardez votre ligne principale pour les appels/SMS, mais désactivez ses données mobiles pour éviter les frais d'itinérance.</p>
+      </div>
+    </div>
+    <div class="esim-step">
+      <div class="esim-num">8</div>
+      <div><h4>Vérifiez une fois sur place</h4>
+        <p>À l'arrivée, contrôlez l'icône réseau et testez une page web.</p>
+      </div>
+    </div>
+
+    <p class="esim-help">
+      Un souci d'installation ? <a href="#" onclick="showTab('chat');return false;">Écrivez à Alexia</a>.
+    </p>
   </div>
 
   <div class="tabbar">

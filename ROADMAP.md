@@ -81,9 +81,11 @@
   ajout/suppression accessible à tout membre du voyage (petit groupe de
   confiance, pas de restriction "ses propres dépenses uniquement")
 
-### e-SIM (à faire)
-- Petit guide pas-à-pas d'installation d'e-SIM, consultable hors-ligne
-  (se prête bien au service worker déjà en place)
+### e-SIM
+- ✅ Guide pas-à-pas générique (iOS + Android), tuile "Installer ma
+  e-SIM" dans Plus. Entièrement statique — fonctionne hors-ligne dès
+  que l'appli a été ouverte une fois (mise en cache par le service
+  worker comme le reste de l'appli)
 
 ### Météo du jour
 - ✅ Écran dédié, via Open-Meteo (gratuit, sans clé) : géocode le lieu de

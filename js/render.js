@@ -21,6 +21,24 @@ window.MyCompanion = window.MyCompanion || {};
     85: ['🌨️', 'Averses de neige'], 86: ['❄️', 'Averses de neige fortes'],
     95: ['⛈️', 'Orage'], 96: ['⛈️', 'Orage avec grêle'], 99: ['⛈️', 'Orage avec grêle fort'],
   };
+  // Taux de taxe sur les ventes indicatifs (moyenne État + taxes locales),
+  // par code d'État à 2 lettres. À prendre comme un ordre de grandeur : la
+  // taxe réelle varie par ville/comté et change d'une année sur l'autre.
+  var US_STATE_TAX = {
+    AL: ['Alabama', 0.0925], AK: ['Alaska', 0.0176], AZ: ['Arizona', 0.084], AR: ['Arkansas', 0.0945],
+    CA: ['Californie', 0.0882], CO: ['Colorado', 0.0772], CT: ['Connecticut', 0.0635], DE: ['Delaware', 0],
+    FL: ['Floride', 0.0702], GA: ['Géorgie', 0.074], HI: ['Hawaï', 0.0444], ID: ['Idaho', 0.0603],
+    IL: ['Illinois', 0.0882], IN: ['Indiana', 0.07], IA: ['Iowa', 0.0694], KS: ['Kansas', 0.087],
+    KY: ['Kentucky', 0.06], LA: ['Louisiane', 0.0955], ME: ['Maine', 0.055], MD: ['Maryland', 0.06],
+    MA: ['Massachusetts', 0.0625], MI: ['Michigan', 0.06], MN: ['Minnesota', 0.0749], MS: ['Mississippi', 0.0707],
+    MO: ['Missouri', 0.0829], MT: ['Montana', 0], NE: ['Nebraska', 0.0694], NV: ['Nevada', 0.0823],
+    NH: ['New Hampshire', 0], NJ: ['New Jersey', 0.066], NM: ['Nouveau-Mexique', 0.0772], NY: ['New York', 0.0852],
+    NC: ['Caroline du Nord', 0.0698], ND: ['Dakota du Nord', 0.0696], OH: ['Ohio', 0.0724], OK: ['Oklahoma', 0.0895],
+    OR: ['Oregon', 0], PA: ['Pennsylvanie', 0.0634], RI: ['Rhode Island', 0.07], SC: ['Caroline du Sud', 0.0744],
+    SD: ['Dakota du Sud', 0.064], TN: ['Tennessee', 0.0955], TX: ['Texas', 0.082], UT: ['Utah', 0.0719],
+    VT: ['Vermont', 0.0624], VA: ['Virginie', 0.0575], WA: ['Washington', 0.0886], WV: ['Virginie-Occidentale', 0.065],
+    WI: ['Wisconsin', 0.0543], WY: ['Wyoming', 0.0536], DC: ['Washington D.C.', 0.06],
+  };
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
   var SWATCH_CLASSES = ['sw1', 'sw2', 'sw3', 'sw4', 'sw5'];
   var CATEGORY_LABELS = {
@@ -601,5 +619,36 @@ window.MyCompanion = window.MyCompanion || {};
         );
       })
       .join('');
+  };
+
+  // ---- Liste des États pour le calculateur de taxes ----
+  // Ne montre que les États réellement traversés pendant ce voyage
+  // (déduits du lieu de chaque étape, ex. "Amarillo, TX" -> TX).
+  window.MyCompanion.renderStateTaxOptions = function (days) {
+    var selectEl = document.getElementById('stateTax');
+    if (!selectEl) return;
+
+    var codes = [];
+    (days || []).forEach(function (d) {
+      var match = /,\s*([A-Za-z]{2})\s*$/.exec(d.location_label || '');
+      var code = match ? match[1].toUpperCase() : null;
+      if (code && US_STATE_TAX[code] && codes.indexOf(code) === -1) codes.push(code);
+    });
+
+    if (!codes.length) return; // pas d'État identifié : on garde la liste par défaut
+
+    codes.sort(function (a, b) { return US_STATE_TAX[a][0].localeCompare(US_STATE_TAX[b][0]); });
+
+    selectEl.innerHTML =
+      codes
+        .map(function (code) {
+          var entry = US_STATE_TAX[code];
+          var pct = (entry[1] * 100).toLocaleString('fr-FR', { maximumFractionDigits: 3 });
+          return '<option value="' + entry[1] + '">' + escapeHtml(entry[0]) + ' — ' + pct + ' %</option>';
+        })
+        .join('') +
+      '<option value="0">Autre / pas de taxe</option>';
+
+    if (window.computeTip) window.computeTip();
   };
 })();
