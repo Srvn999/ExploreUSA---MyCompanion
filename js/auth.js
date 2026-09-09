@@ -26,7 +26,9 @@ window.MyCompanion = window.MyCompanion || {};
     var claim = await supabase
       .from('travelers')
       .update({ user_id: user.id })
-      .eq('email', user.email)
+      .ilike('email', user.email) // insensible à la casse : évite un email
+      // "Zoe@Email.com" saisi dans l'admin qui ne matcherait pas
+      // "zoe@email.com" tel que Supabase Auth le normalise
       .is('user_id', null)
       .select()
       .maybeSingle();
