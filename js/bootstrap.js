@@ -15,6 +15,16 @@
       window.MyCompanion.renderAlbumPreview(bundle.photos);
       window.MyCompanion.renderDocuments(bundle.documents);
       if (window.MyCompanion.initChat) window.MyCompanion.initChat(traveler.trip_id, traveler.id);
+
+      window.MyCompanion.getTripPhotoStorageBytes(traveler.trip_id, bundle.travelers).then(function (bytes) {
+        window.MyCompanion.renderAlbumStorage(bytes);
+      });
+
+      if (window.MyCompanion.initAlbumUpload) {
+        window.MyCompanion.initAlbumUpload(traveler.trip_id, traveler.id, bundle.days, function () {
+          return loadTravelerTrip(traveler);
+        });
+      }
     } catch (err) {
       console.warn('[MyCompanion] Chargement du voyage impossible.', err);
     }

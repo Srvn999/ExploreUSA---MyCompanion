@@ -68,6 +68,25 @@ window.MyCompanion.fetchTripBundle = async function (tripId) {
   };
 };
 
+// Taille réelle (en octets) de l'album photo d'un voyage : on liste le
+// contenu du dossier de chaque voyageur dans le bucket 'trip-photos' et
+// on additionne la taille de chaque fichier.
+window.MyCompanion.getTripPhotoStorageBytes = async function (tripId, travelers) {
+  var supabase = window.MyCompanion.client;
+  if (!supabase || !tripId) return 0;
+  var total = 0;
+  var folders = (travelers || []).map(function (t) { return tripId + '/' + t.id; });
+  for (var i = 0; i < folders.length; i++) {
+    var res = await supabase.storage.from('trip-photos').list(folders[i], { limit: 1000 });
+    if (!res.error && res.data) {
+      res.data.forEach(function (obj) {
+        if (obj.metadata && obj.metadata.size) total += obj.metadata.size;
+      });
+    }
+  }
+  return total;
+};
+
 // Bucket 'trip-documents' privé -> URL signée à l'ouverture.
 window.MyCompanion.getDocumentSignedUrl = async function (storagePath) {
   var supabase = window.MyCompanion.client;

@@ -221,6 +221,19 @@ window.MyCompanion = window.MyCompanion || {};
     });
   };
 
+  // ---- Espace utilisé (album) ----
+  window.MyCompanion.renderAlbumStorage = function (bytes) {
+    var textEl = document.getElementById('storageUsedText');
+    var fillEl = document.getElementById('storageFill');
+    if (!textEl || !fillEl) return;
+
+    var QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 Go, indicatif
+    var mb = bytes / (1024 * 1024);
+    var used = mb >= 1024 ? (mb / 1024).toFixed(1) + ' Go' : Math.round(mb) + ' Mo';
+    textEl.textContent = used + ' / 5 Go';
+    fillEl.style.width = Math.min(100, (bytes / QUOTA_BYTES) * 100) + '%';
+  };
+
   // ---- Album photo ----
   window.MyCompanion.renderAlbum = function (days, photos, travelers) {
     var sectionsEl = document.getElementById('albumSections');
@@ -240,7 +253,7 @@ window.MyCompanion = window.MyCompanion || {};
           .join('');
     }
 
-    if (!days || !days.length || !photos || !photos.length) {
+    if (!photos || !photos.length) {
       sectionsEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune photo pour l\'instant.</p>';
       return;
     }
@@ -256,7 +269,32 @@ window.MyCompanion = window.MyCompanion || {};
       (photosByDay[key] = photosByDay[key] || []).push(p);
     });
 
-    var sortedDays = days
+    function buildTiles(list) {
+      return list
+        .map(function (p, i) {
+          var traveler = travelerById[p.traveler_id];
+          var owner = traveler ? traveler.owner_slug : 'alexia';
+          var pin = p.taken_at
+            ? '<span class="pin">' + PHOTO_PIN_ICON + formatShortDate(p.taken_at) + '</span>'
+            : '';
+          return (
+            '<div class="photo-tile ' + SWATCH_CLASSES[i % SWATCH_CLASSES.length] + '" data-owner="' +
+            escapeHtml(owner) + '" data-storage-path="' + escapeHtml(p.storage_path) + '">' + pin + '</div>'
+          );
+        })
+        .join('');
+    }
+
+    function buildSection(title, list) {
+      return (
+        '<div class="album-section">' +
+        '<div class="sec-title">' + SECTION_PIN_ICON + escapeHtml(title) + '</div>' +
+        '<div class="album-grid">' + buildTiles(list) + '</div>' +
+        '</div>'
+      );
+    }
+
+    var sortedDays = (days || [])
       .slice()
       .sort(function (a, b) {
         return b.day_number - a.day_number;
@@ -265,35 +303,18 @@ window.MyCompanion = window.MyCompanion || {};
         return (photosByDay[d.id] || []).length > 0;
       });
 
-    if (!sortedDays.length) {
-      sectionsEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Aucune photo pour l\'instant.</p>';
-      return;
-    }
-
-    sectionsEl.innerHTML = sortedDays
+    var sectionsHtml = sortedDays
       .map(function (day) {
-        var dayPhotos = photosByDay[day.id] || [];
-        var tiles = dayPhotos
-          .map(function (p, i) {
-            var traveler = travelerById[p.traveler_id];
-            var owner = traveler ? traveler.owner_slug : 'alexia';
-            var pin = p.taken_at
-              ? '<span class="pin">' + PHOTO_PIN_ICON + formatShortDate(p.taken_at) + '</span>'
-              : '';
-            return (
-              '<div class="photo-tile ' + SWATCH_CLASSES[i % SWATCH_CLASSES.length] + '" data-owner="' +
-              escapeHtml(owner) + '" data-storage-path="' + escapeHtml(p.storage_path) + '">' + pin + '</div>'
-            );
-          })
-          .join('');
-        return (
-          '<div class="album-section">' +
-          '<div class="sec-title">' + SECTION_PIN_ICON + 'Jour ' + day.day_number + ' · ' + escapeHtml(day.location_label || '') + '</div>' +
-          '<div class="album-grid">' + tiles + '</div>' +
-          '</div>'
-        );
+        return buildSection('Jour ' + day.day_number + ' · ' + (day.location_label || ''), photosByDay[day.id]);
       })
       .join('');
+
+    var uncategorized = photosByDay.none || [];
+    if (uncategorized.length) {
+      sectionsHtml += buildSection('Autres photos', uncategorized);
+    }
+
+    sectionsEl.innerHTML = sectionsHtml;
 
     Array.prototype.forEach.call(sectionsEl.querySelectorAll('.photo-tile[data-storage-path]'), function (tile) {
       window.MyCompanion.getPhotoSignedUrl(tile.dataset.storagePath).then(function (url) {

@@ -678,8 +678,8 @@
     </div>
 
     <div class="storage-card">
-      <div class="storage-top"><span>Espace utilisé</span><span>1.5 Go / 5 Go</span></div>
-      <div class="storage-track"><div class="storage-fill" style="width:30%;"></div></div>
+      <div class="storage-top"><span>Espace utilisé</span><span id="storageUsedText">—</span></div>
+      <div class="storage-track"><div class="storage-fill" id="storageFill" style="width:0%;"></div></div>
       <div class="storage-hint">Espace partagé du groupe · au-delà de 5 Go, les photos restent visibles en qualité réduite</div>
     </div>
 
@@ -728,9 +728,11 @@
     </div>
 
     <div class="fab-panel" id="fabPanel">
-      <button onclick="alert('Sélection depuis la galerie du téléphone')">📁 Depuis la galerie</button>
-      <button onclick="alert('Ouverture de l’appareil photo (géolocalisation activée)')">📷 Prendre une photo</button>
+      <button type="button" id="fabGalleryBtn">📁 Depuis la galerie</button>
+      <button type="button" id="fabCameraBtn">📷 Prendre une photo</button>
     </div>
+    <input type="file" id="galleryInput" accept="image/*" hidden>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
     <div class="fab" onclick="document.getElementById('fabPanel').classList.toggle('show')">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
     </div>
@@ -898,6 +900,7 @@
 <script src="js/data.js"></script>
 <script src="js/render.js"></script>
 <script src="js/chat.js"></script>
+<script src="js/albumUpload.js"></script>
 <script src="js/bootstrap.js"></script>
 <script src="js/backGuard.js"></script>
 <script>
