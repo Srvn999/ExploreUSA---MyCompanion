@@ -267,6 +267,17 @@
   vol intérieur US) et essence (gallons US/litres), chaque bloc
   bidirectionnel. Purement du calcul client, aucun appel réseau
 
+- **Correctif** : le convertisseur €/$ affichait un taux figé dans le
+  code (1,09) avec un texte "Taux mis à jour aujourd'hui à 06:12" toujours
+  identique quelle que soit la date réelle — il ne se mettait en fait
+  jamais à jour. Remplacé par un vrai taux en direct (Frankfurter,
+  gratuit et sans clé, taux quotidiens de la BCE), mis en cache un jour
+  sur l'appareil pour ne pas refaire l'appel à chaque ouverture. Si l'API
+  est injoignable (hors ligne...), l'appli retombe sur le dernier taux
+  réel connu sur cet appareil, ou à défaut un repli fixe — dans les deux
+  cas le texte sous le taux le dit clairement plutôt que de prétendre
+  être à jour
+
 ## À faire
 
 ### Connexion & sécurité

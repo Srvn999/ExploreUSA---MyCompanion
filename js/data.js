@@ -348,6 +348,23 @@ window.MyCompanion.geocodeLabel = async function (label) {
   }
 };
 
+// Taux de change EUR -> USD en direct, via Frankfurter (gratuit, sans
+// clé, taux quotidiens de la Banque centrale européenne) — utilisé par
+// le convertisseur €/$ dans Outils, pour ne jamais afficher un taux figé
+// dans le code comme s'il était à jour.
+window.MyCompanion.fetchExchangeRate = async function () {
+  try {
+    var res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');
+    var data = await res.json();
+    var rate = data && data.rates && data.rates.USD;
+    if (!rate) return null;
+    return { rate: rate, date: data.date };
+  } catch (err) {
+    console.warn('[MyCompanion] Taux de change indisponible', err);
+    return null;
+  }
+};
+
 // Traduction courte (outil "Traducteur" dans Outils), via MyMemory
 // (gratuit, sans clé). Pensé pour de courtes phrases du quotidien en
 // voyage — pas pour de gros volumes de texte.

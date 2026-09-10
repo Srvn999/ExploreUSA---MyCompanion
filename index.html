@@ -943,7 +943,7 @@
     <div id="sub-conv">
       <div class="sign-panel">
         <div class="sign-rate">1 € = <span id="rateShown">1,09</span> $</div>
-        <div class="sign-updated">Taux mis à jour aujourd'hui à 06:12</div>
+        <div class="sign-updated">Chargement du taux en direct...</div>
         <div class="convert-row">
           <div class="convert-field"><label id="labelFrom">Euros</label><input type="number" id="eurInput" value="100" oninput="convert()"></div>
           <div class="swap" onclick="swapConvert()">
@@ -1591,7 +1591,10 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  const RATE = 1.09;
+  // Repli si le taux en direct (Frankfurter, voir refreshExchangeRate)
+  // n'est pas joignable au chargement — jamais affiché comme "à jour"
+  // dans ce cas, voir applyRate().
+  let RATE = 1.09;
 
   const MAIN_TABS = ['accueil','itineraire','budget','vols','plus'];
 
@@ -1696,20 +1699,79 @@
     const usd = parseFloat(document.getElementById('usdInput').value)||0;
     document.getElementById('eurInput').value = (usd/RATE).toFixed(2);
   }
+  function updateRateDisplay(){
+    const signRateEl = document.querySelector('.sign-rate');
+    if(!signRateEl) return;
+    signRateEl.innerHTML = direction==='eur-usd'
+      ? '1 € = <span id="rateShown">'+RATE.toFixed(2).replace('.',',')+'</span> $'
+      : '1 $ = <span id="rateShown">'+(1/RATE).toFixed(2).replace('.',',')+'</span> €';
+  }
   function swapConvert(){
     const fromLabel = document.getElementById('labelFrom');
     const toLabel = document.getElementById('labelTo');
-    const rateShown = document.getElementById('rateShown');
     if(direction==='eur-usd'){
       direction='usd-eur';
       fromLabel.textContent='Dollars'; toLabel.textContent='Euros';
-      rateShown.textContent = (1/RATE).toFixed(2).replace('.',',');
-      document.querySelector('.sign-rate').innerHTML = '1 $ = <span id="rateShown">'+(1/RATE).toFixed(2).replace('.',',')+'</span> €';
     } else {
       direction='eur-usd';
       fromLabel.textContent='Euros'; toLabel.textContent='Dollars';
-      document.querySelector('.sign-rate').innerHTML = '1 € = <span id="rateShown">1,09</span> $';
     }
+    updateRateDisplay();
+  }
+
+  // Taux en direct (Frankfurter, gratuit et sans clé, taux quotidiens de
+  // la BCE) : RATE ci-dessus n'est qu'un repli si l'API est injoignable
+  // (hors ligne, panne...) — dans ce cas le texte sous le taux le dit
+  // clairement plutôt que de prétendre être à jour. Mis en cache un jour
+  // (localStorage) pour ne pas refaire l'appel à chaque ouverture.
+  async function refreshExchangeRate(){
+    const cacheKey = 'mc_fx_eur_usd';
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch(e){}
+    const todayIso = new Date().toISOString().slice(0,10);
+
+    function applyRate(rate, dateIso, stale){
+      RATE = rate;
+      convert();
+      updateRateDisplay();
+      const updatedEl = document.querySelector('.sign-updated');
+      if(!updatedEl) return;
+      if(dateIso){
+        const d = new Date(dateIso+'T00:00:00');
+        updatedEl.textContent = 'Taux BCE du ' + d.toLocaleDateString('fr-FR', {day:'numeric', month:'long'}) +
+          (stale ? ' (dernier taux connu, pas de connexion)' : '');
+      } else {
+        updatedEl.textContent = 'Taux indicatif — mise à jour en direct indisponible';
+      }
+    }
+
+    if(cached && cached.fetchedOn === todayIso){
+      applyRate(cached.rate, cached.date, false);
+      return;
+    }
+
+    if(window.MyCompanion && window.MyCompanion.fetchExchangeRate){
+      const fx = await window.MyCompanion.fetchExchangeRate();
+      if(fx){
+        try { localStorage.setItem(cacheKey, JSON.stringify({rate: fx.rate, date: fx.date, fetchedOn: todayIso})); } catch(e){}
+        applyRate(fx.rate, fx.date, false);
+        return;
+      }
+    }
+
+    // API injoignable : dernier taux réel connu sur cet appareil s'il y
+    // en a un, sinon le repli fixe — jamais sans le dire.
+    if(cached && cached.rate){
+      applyRate(cached.rate, cached.date, true);
+    } else {
+      applyRate(RATE, null, true);
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', refreshExchangeRate);
+  } else {
+    refreshExchangeRate();
   }
 
   let satRate = 0.18;
