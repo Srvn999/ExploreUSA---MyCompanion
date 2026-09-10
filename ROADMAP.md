@@ -243,6 +243,15 @@
   part. Un seul appel Open-Meteo suffit (forecast_days=6 au lieu de 1),
   pas d'appel supplémentaire
 
+- Carnet de voyage : nouvelle tuile dans Plus, un espace de notes
+  personnelles par jour d'itinéraire, en complément de l'album photo
+  partagé. À la différence de l'album ou des frais partagés, c'est privé
+  : chaque voyageur ne voit/modifie que ses propres notes, jamais celles
+  d'un autre membre du voyage (nouvelle table `journal_entries`, RLS
+  restreinte au voyageur propriétaire). Chargé à la demande à
+  l'ouverture de l'écran seulement (js/journal.js). Migration
+  `0016_journal.sql` à appliquer une fois dans Supabase (SQL editor)
+
 ## À faire
 
 ### Connexion & sécurité

@@ -645,6 +645,21 @@
     display:inline-block; font-size:10.5px; font-weight:700; color:var(--terracotta-dark);
     background:var(--sand-dark); border-radius:8px; padding:2px 8px; margin-top:7px;
   }
+  .journal-card{
+    background:var(--white); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:10px;
+  }
+  .journal-card h4{ font-size:13.5px; font-weight:700; color:var(--navy); margin:0 0 8px; }
+  .journal-textarea{
+    width:100%; min-height:80px; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-family:'Manrope'; font-size:13px; color:var(--ink); resize:vertical;
+  }
+  .journal-actions{ display:flex; align-items:center; gap:10px; margin-top:8px; }
+  .journal-save-btn{
+    background:var(--navy); color:#fff; border:none; padding:8px 16px; border-radius:10px;
+    font-family:'Manrope'; font-weight:700; font-size:12.5px; cursor:pointer;
+  }
+  .journal-save-btn:disabled{ opacity:.4; cursor:default; }
+  .journal-status{ font-size:11.5px; color:#8a8470; }
   .back-toast{
     position:absolute; left:50%; bottom:100px; transform:translateX(-50%) translateY(10px);
     background:var(--navy); color:#fff; font-family:'Manrope'; font-size:12.5px; font-weight:700;
@@ -1110,6 +1125,11 @@
         <h4>Bon à savoir</h4>
         <p>Pourboires, essence, code de la route... les repères utiles</p>
       </div>
+      <div class="plus-tile" onclick="showTab('journal'); if(window.MyCompanion.openJournal) window.MyCompanion.openJournal();" style="cursor:pointer;">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+        <h4>Carnet de voyage</h4>
+        <p>Vos notes perso, un espace privé rien que pour vous</p>
+      </div>
     </div>
     <p class="caption" style="cursor:pointer; text-decoration:underline;" onclick="if(confirm('Voulez-vous vraiment vous déconnecter ?')&&window.MyCompanion&&window.MyCompanion.signOut)window.MyCompanion.signOut();">Se déconnecter</p>
   </div>
@@ -1412,6 +1432,18 @@
     </div>
     <p class="caption" style="margin-bottom:14px;">Quelques repères culturels et pratiques pour votre séjour, par Alexia.</p>
     <div id="cultureTipsListClient"></div>
+  </div>
+
+  <!-- CARNET DE VOYAGE (notes perso privées, par jour) -->
+  <div class="screen" id="screen-journal">
+    <div class="album-header">
+      <div class="back-arrow" onclick="history.back()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Carnet de voyage</h1>
+    </div>
+    <p class="caption" style="margin-bottom:14px;">Notes privées, visibles par vous seul(e) — un souvenir, une idée, une pensée du jour.</p>
+    <div id="journalList"></div>
   </div>
 
   <div class="tabbar">
@@ -1749,6 +1781,7 @@
 <script src="js/render.js"></script>
 <script src="js/tripMap.js"></script>
 <script src="js/sos.js"></script>
+<script src="js/journal.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/albumUpload.js"></script>
 <script src="js/expenses.js"></script>
