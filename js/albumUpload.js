@@ -21,6 +21,11 @@ window.MyCompanion.initAlbumUpload = function (tripId, travelerId, days, onUploa
   async function handleFile(file) {
     if (!file) return;
     if (fabPanel) fabPanel.classList.remove('show');
+    var check = window.MyCompanion.validateUpload(file, { maxBytes: 15 * 1024 * 1024, allowedPrefixes: ['image/'] });
+    if (!check.ok) {
+      alert(check.message);
+      return;
+    }
     try {
       await window.MyCompanion.uploadPhoto({
         tripId: tripId,

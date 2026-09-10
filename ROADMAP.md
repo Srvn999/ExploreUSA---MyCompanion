@@ -150,20 +150,25 @@
   quelques emails/heure (prévu pour les tests, pas pour la production) —
   sans ça, les invitations échoueront avec "email rate limit exceeded"
   dès qu'il y a plusieurs voyageurs à inviter le même jour
-- Reste de l'audit sécurité, pas encore traité :
-  - Aucune vérification réelle du type/poids des fichiers uploadés
-    (photos, documents, visuels d'étape) au-delà de l'attribut HTML
-    `accept`, qui n'est qu'une suggestion pour le sélecteur de fichiers —
-    pas une barrière. À ajouter : vérification du type MIME réel + taille
-    max côté client avant l'envoi
-  - La visionneuse PDF (iframe) n'a pas d'attribut `sandbox` — défense en
-    profondeur peu coûteuse à ajouter
-  - Compte admin d'Alexia sans double authentification (2FA) — à activer
-    si elle est d'accord pour l'utiliser, vu que ce compte a accès à tous
-    les voyages
-  - Choix assumé, pas un bug : n'importe quel voyageur peut modifier/
-    supprimer les dépenses de n'importe qui d'autre du même voyage (esprit
-    "cagnotte entre amis")
+- ✅ Validation des fichiers uploadés (photos album, visuels d'étape,
+  galerie de photos, documents) : type MIME réel + taille max vérifiés
+  côté client avant l'envoi (`window.MyCompanion.validateUpload` dans
+  `js/supabaseClient.js`, chargé par index.html et admin.html). L'attribut
+  HTML `accept` n'était qu'une suggestion pour le sélecteur de fichiers,
+  pas une vraie barrière
+- ✅ La visionneuse PDF (iframe) a maintenant `sandbox="allow-same-origin"`
+  (sans `allow-scripts`) — défense en profondeur contre un fichier
+  déguisé en PDF, sans rien changer à l'affichage normal
+- Compte admin d'Alexia sans double authentification (2FA) — action
+  manuelle côté Alexia (Supabase ne permet pas de l'activer par migration
+  SQL) : Authentication → Providers → Email, ou directement sur son
+  compte utilisateur. À activer si elle est d'accord pour l'utiliser, vu
+  que ce compte a accès à tous les voyages
+- Choix assumé, pas un bug : n'importe quel voyageur peut modifier/
+  supprimer les dépenses de n'importe qui d'autre du même voyage (esprit
+  "cagnotte entre amis")
+- Principe de sécurité systématique pour la suite du projet consigné
+  dans `CLAUDE.md` (nouveau fichier) — à relire en début de session
 
 ### Appli installable (PWA)
 - ✅ Logo/icône (pin dégradé or/terracotta sur fond marine, cohérent avec

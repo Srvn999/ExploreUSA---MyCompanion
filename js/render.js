@@ -142,7 +142,10 @@ window.MyCompanion = window.MyCompanion || {};
     if (kind === 'image') {
       bodyEl.innerHTML = '<img src="' + url + '" alt="">';
     } else if (kind === 'pdf') {
-      bodyEl.innerHTML = '<iframe src="' + url + '"></iframe>';
+      // sandbox sans allow-scripts : le PDF s'affiche (rendu natif du
+      // navigateur, pas du JS dans la page encadrée), mais un fichier
+      // déguisé en PDF ne pourrait pas exécuter de script.
+      bodyEl.innerHTML = '<iframe src="' + url + '" sandbox="allow-same-origin"></iframe>';
     } else {
       bodyEl.innerHTML =
         '<div class="doc-viewer-fallback">' +

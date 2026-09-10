@@ -578,6 +578,8 @@
 
     var file = form.image.files[0];
     if (file) {
+      var imgCheck = window.MyCompanion.validateUpload(file, { maxBytes: 15 * 1024 * 1024, allowedPrefixes: ['image/'] });
+      if (!imgCheck.ok) { alert(imgCheck.message); return; }
       var imagePath = currentTripId + '/' + itemId + '/' + Date.now() + '-' + file.name;
       var uploadRes = await supabase.storage.from('trip-assets').upload(imagePath, file);
       if (uploadRes.error) { alert("Erreur d'envoi du visuel : " + uploadRes.error.message); return; }
@@ -616,6 +618,8 @@
     var imagePath = null;
     var file = form.image.files[0];
     if (file) {
+      var imgCheck = window.MyCompanion.validateUpload(file, { maxBytes: 15 * 1024 * 1024, allowedPrefixes: ['image/'] });
+      if (!imgCheck.ok) { alert(imgCheck.message); return; }
       imagePath = currentTripId + '/' + dayId + '/' + Date.now() + '-' + file.name;
       var uploadRes = await supabase.storage.from('trip-assets').upload(imagePath, file);
       if (uploadRes.error) { alert("Erreur d'envoi du visuel : " + uploadRes.error.message); return; }
@@ -650,6 +654,8 @@
 
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
+      var photoCheck = window.MyCompanion.validateUpload(file, { maxBytes: 15 * 1024 * 1024, allowedPrefixes: ['image/'] });
+      if (!photoCheck.ok) { alert(file.name + ' : ' + photoCheck.message); continue; }
       var path = currentTripId + '/' + itemId + '/' + Date.now() + '-' + i + '-' + file.name;
       var uploadRes = await supabase.storage.from('trip-assets').upload(path, file);
       if (uploadRes.error) { alert("Erreur d'envoi d'une photo : " + uploadRes.error.message); continue; }
@@ -806,6 +812,15 @@
     var form = e.target;
     var file = form.file.files[0];
     if (!file) return;
+    var docCheck = window.MyCompanion.validateUpload(file, {
+      maxBytes: 20 * 1024 * 1024,
+      allowedPrefixes: ['image/'],
+      allowedTypes: [
+        'application/pdf', 'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ],
+    });
+    if (!docCheck.ok) { alert(docCheck.message); return; }
     var path = currentTripId + '/' + Date.now() + '-' + file.name;
     var uploadRes = await supabase.storage.from('trip-documents').upload(path, file);
     if (uploadRes.error) { alert('Erreur : ' + uploadRes.error.message); return; }
