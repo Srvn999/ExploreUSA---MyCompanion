@@ -1355,6 +1355,15 @@
 
   const MAIN_TABS = ['accueil','itineraire','budget','vols','plus'];
 
+  // Onglet principal actif au moment où on plonge dans un écran secondaire
+  // (Documents, Album, Chat, fiche détail d'étape...), et si on est déjà
+  // "en profondeur" depuis ce plongeon. Sert à poser un repère dans
+  // l'historique pour cet onglet AVANT d'empiler l'écran secondaire lui-
+  // même — sans ça, le retour matériel/geste ne remonte pas à la liste
+  // (Plus, Itinéraire...) mais à ce qu'il y avait avant, ou ferme l'appli.
+  let currentMainTab = 'accueil';
+  let inSubScreen = false;
+
   function showTab(name, sub, fromHistory){
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
@@ -1363,12 +1372,26 @@
     if(navBtn) navBtn.classList.add('active');
     if(name==='budget' && sub) showSub(sub);
     if(name==='chat' && window.MyCompanion && window.MyCompanion.markChatRead) window.MyCompanion.markChatRead();
-    // Les écrans secondaires (Documents, Album, Chat...) s'enregistrent
-    // dans l'historique pour que le retour matériel/geste remonte à
-    // l'écran d'où on vient au lieu de fermer l'appli — voir backGuard.js.
-    // Les 5 onglets principaux ne s'empilent pas (changer d'onglet n'est
-    // pas une navigation "en profondeur").
-    if(!fromHistory && MAIN_TABS.indexOf(name) === -1 && window.MyCompanion && window.MyCompanion.pushScreenState){
+
+    if(MAIN_TABS.indexOf(name) !== -1){
+      // De retour sur un onglet principal (tap direct ou retour matériel) :
+      // le prochain plongeon en profondeur devra reposer un repère.
+      currentMainTab = name;
+      inSubScreen = false;
+      return;
+    }
+
+    // Écran secondaire (Documents, Album, Chat, fiche détail d'étape...) :
+    // s'enregistre dans l'historique pour que le retour matériel/geste y
+    // remonte au lieu de fermer l'appli — voir backGuard.js. Si c'est le
+    // premier écran secondaire depuis l'onglet principal courant, on pose
+    // d'abord un repère pour cet onglet, sinon le retour depuis Documents
+    // (par ex.) ne remonterait pas jusqu'à Plus mais plus loin encore.
+    if(!fromHistory && window.MyCompanion && window.MyCompanion.pushScreenState){
+      if(!inSubScreen){
+        window.MyCompanion.pushScreenState(currentMainTab);
+        inSubScreen = true;
+      }
       window.MyCompanion.pushScreenState(name, sub);
     }
   }

@@ -153,6 +153,22 @@
     usage réel, en passant alors par une fonction serveur dédiée (comme
     send-itinerary-reminders) pour ne jamais exposer une clé payante
     côté client
+- Retour matériel/geste, round 2 : le correctif précédent (voir plus haut)
+  ne couvrait qu'à moitié le cas — plonger depuis un onglet principal
+  (Plus, Itinéraire, Accueil...) vers un écran secondaire (Documents,
+  Album, Urgences, fiche détail d'étape...) n'enregistrait que l'écran
+  secondaire dans l'historique, jamais l'onglet de départ. Résultat : le
+  retour ne remontait pas à la liste mais à ce qu'il y avait avant
+  (parfois un tout autre écran resté en mémoire, parfois direct la
+  logique de sortie). `showTab()` pose maintenant un repère pour
+  l'onglet principal courant avant d'empiler l'écran secondaire — mais
+  seulement au premier plongeon depuis cet onglet (pas à chaque
+  changement d'écran secondaire imbriqué, ex. e-SIM marque → tuto, où le
+  retour doit remonter à la liste des marques puis seulement ensuite à
+  Plus). Vérifié une à une sur toutes les tuiles de Plus (Album,
+  Urgences, Message à Alexia, Documents, Météo, Rappels, Frais partagés,
+  e-SIM + son tuto par marque/méthode générale) + le raccourci "Écrire à
+  Alexia" depuis l'accueil + la fiche détail d'étape depuis l'itinéraire
 
 ## À faire
 
