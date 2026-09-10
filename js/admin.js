@@ -38,6 +38,21 @@
       .replace(/[^a-z0-9]+/g, '');
   }
 
+  // Notification push aux voyageurs du voyage courant (nouveau document,
+  // étape ajoutée/modifiée) — voir supabase/functions/notify-trip-update.
+  // Jamais bloquant pour l'action en cours si ça échoue (fonction pas
+  // encore déployée, aucun voyageur abonné aux notifications, etc.).
+  async function notifyTripUpdate(title, body) {
+    if (!supabase || !currentTripId) return;
+    try {
+      await supabase.functions.invoke('notify-trip-update', {
+        body: { trip_id: currentTripId, title: title, body: body },
+      });
+    } catch (err) {
+      console.warn('[MyCompanion] Notification de mise à jour non envoyée.', err);
+    }
+  }
+
   // ---------------------------------------------------------------
   // AUTH
   // ---------------------------------------------------------------
@@ -590,6 +605,7 @@
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
     editingItemId = null;
     await loadDays();
+    notifyTripUpdate('🗺️ Étape mise à jour', payload.title + ' a été modifiée dans votre itinéraire.');
   }
 
   async function onAddDay(e) {
@@ -625,11 +641,12 @@
       if (uploadRes.error) { alert("Erreur d'envoi du visuel : " + uploadRes.error.message); return; }
     }
 
+    var itemTitle = form.title.value.trim();
     var res = await supabase.from('itinerary_items').insert({
       day_id: dayId,
       time: form.time.value.trim(),
       item_type: form.item_type.value,
-      title: form.title.value.trim(),
+      title: itemTitle,
       map_query: form.map_query.value.trim() || null,
       address: form.address.value.trim() || null,
       opening_hours: form.opening_hours.value.trim() || null,
@@ -640,6 +657,7 @@
     });
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
     await loadDays();
+    notifyTripUpdate('🗺️ Nouvelle étape', itemTitle + ' a été ajoutée à votre itinéraire.');
   }
 
   async function onAddItemPhotos(e) {
@@ -824,15 +842,17 @@
     var path = currentTripId + '/' + Date.now() + '-' + file.name;
     var uploadRes = await supabase.storage.from('trip-documents').upload(path, file);
     if (uploadRes.error) { alert('Erreur : ' + uploadRes.error.message); return; }
+    var docTitle = form.title.value.trim();
     var res = await supabase.from('documents').insert({
       trip_id: currentTripId,
-      title: form.title.value.trim(),
+      title: docTitle,
       category: form.category.value,
       storage_path: path,
     });
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
     form.reset();
     await loadDocuments();
+    notifyTripUpdate('📄 Nouveau document', docTitle + ' vient d\'être ajouté à votre espace documents.');
   }
 
   // ---------------------------------------------------------------

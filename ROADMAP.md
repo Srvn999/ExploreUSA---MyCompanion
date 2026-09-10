@@ -198,6 +198,23 @@
   mise en cache en mémoire pour ne pas re-géocoder deux étapes au même
   endroit ni recommencer à chaque réouverture de l'écran dans la même
   session
+- Notifications push sur le contenu du voyage (pas que les rappels
+  d'horaire) : quand Alexia ajoute un document ou ajoute/modifie une
+  étape d'itinéraire depuis l'admin, tous les voyageurs abonnés aux
+  notifications (ceux qui ont déjà activé "Rappels" au moins une fois,
+  même table `push_subscriptions`, pas de nouveau réglage à gérer) sont
+  notifiés. Nouvelle fonction serveur `notify-trip-update`, appelée
+  directement par le navigateur d'Alexia (pas par pg_cron) juste après
+  l'ajout/la modification réussie — réutilise les mêmes secrets VAPID
+  déjà configurés, aucun secret supplémentaire à ajouter. Vérifie que
+  l'appelant est bien admin (`is_admin()`) avant d'envoyer quoi que ce
+  soit : sans ça, n'importe quel voyageur connecté aurait pu notifier
+  tous les autres membres du voyage. **Étape manuelle à faire une fois
+  par Alexia/Servan** : déployer cette nouvelle fonction depuis le
+  Dashboard Supabase (Edge Functions → Deploy a new function → coller le
+  contenu de `supabase/functions/notify-trip-update/index.ts`), avec
+  "Verify JWT" laissé activé (à la différence de la fonction des
+  rappels) — voir le fichier pour le détail
 
 ## À faire
 
