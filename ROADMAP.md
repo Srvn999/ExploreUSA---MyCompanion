@@ -231,13 +231,16 @@
 ### Rappels (notifications push)
 - ✅ Toggle + délai (15/30/60 min) côté voyageur, abonnement Web Push
   (`js/reminders.js`), fonction serveur programmée (voir ci-dessus)
-- À vérifier après le premier déploiement de la fonction : l'import
-  `npm:web-push` fonctionne dans la majorité des cas sur les fonctions
-  Supabase (runtime Deno avec compatibilité npm), mais c'est le point le
-  plus susceptible de coincer techniquement. Si le déploiement échoue à
-  cause de cet import, la solution de repli est une implémentation du
-  protocole Web Push "à la main" (JWT VAPID + chiffrement du payload)
-  sans dépendance npm — plus de code, mais zéro dépendance externe
+- ✅ **Correctif** : la librairie `npm:web-push` provoquait un timeout côté
+  serveur (`Gateway Timeout` sur ~2/3 des appels, confirmé en prod le
+  10/9) — elle utilise en interne des mécanismes réseau propres à Node.js
+  qui restent bloqués dans le runtime Deno des fonctions Supabase. Envoi
+  Web Push réimplémenté à la main (JWT VAPID signé + chiffrement du
+  payload en aes128gcm, RFC 8291/8292) avec uniquement l'API Web Crypto
+  standard, zéro dépendance npm. Logique de chiffrement vérifiée par un
+  test de bout en bout (chiffrement + déchiffrement indépendant, hors
+  Deno) avant mise en prod — voir `supabase/functions/send-itinerary-
+  reminders/index.ts`
 - Pas encore de contrôle fin par étape ("je veux le rappel pour le
   restaurant mais pas pour l'hôtel") : c'est un réglage global par
   voyageur pour l'instant. À ajouter facilement plus tard si le besoin se
