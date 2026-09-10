@@ -119,15 +119,26 @@
   "Conseils libres" sont isolés dans des encarts distincts avec un
   intitulé, pour distinguer plus facilement "les étapes déjà là" de "ce
   qu'on est en train d'ajouter"
+- Audit sécurité (session du 10/9) : revue de toutes les policies RLS
+  (chaque table vérifiée une par une), du stockage, de la gestion des
+  secrets, et de l'échappement des données affichées (protection XSS —
+  aucune faille trouvée, `escapeHtml` systématique). Deux correctifs
+  appliqués :
+  - Suppression des policies "demo public ..." qui laissaient n'importe
+    qui sur Internet lire le voyage de démo et **écrire dans son chat**
+    sans compte (migration `0014_remove_demo_public_access.sql`)
+  - `@supabase/supabase-js` figé sur une version exacte (2.116.0) au lieu
+    de la version majeure seule — évite qu'une mise à jour de la
+    librairie (légitime ou non) change silencieusement de comportement
+    pour tous les utilisateurs sans revue de notre part
 
 ## À faire
 
 ### Connexion & sécurité
 - ✅ Connexion par voyageur (voir ci-dessus)
-- Retirer les règles de lecture/écriture publiques temporaires une fois
-  qu'on n'en a plus besoin pour les démos rapides :
-  - `supabase/migrations/0002_demo_public_read.sql`
-  - Les policies "demo public ..." de `0003_admin_and_messages.sql`
+- ✅ Retiré : les policies "demo public ..." (lecture publique du voyage
+  de démo, écriture publique dans son chat, lecture publique de son
+  bucket) — migration `0014_remove_demo_public_access.sql`
 - Attention au lien magique : par défaut Supabase attend qu'il soit ouvert
   sur le même appareil/navigateur que celui utilisé pour le demander (flow
   PKCE). Si des voyageurs se plaignent que le lien reçu sur leur téléphone
@@ -139,6 +150,20 @@
   quelques emails/heure (prévu pour les tests, pas pour la production) —
   sans ça, les invitations échoueront avec "email rate limit exceeded"
   dès qu'il y a plusieurs voyageurs à inviter le même jour
+- Reste de l'audit sécurité, pas encore traité :
+  - Aucune vérification réelle du type/poids des fichiers uploadés
+    (photos, documents, visuels d'étape) au-delà de l'attribut HTML
+    `accept`, qui n'est qu'une suggestion pour le sélecteur de fichiers —
+    pas une barrière. À ajouter : vérification du type MIME réel + taille
+    max côté client avant l'envoi
+  - La visionneuse PDF (iframe) n'a pas d'attribut `sandbox` — défense en
+    profondeur peu coûteuse à ajouter
+  - Compte admin d'Alexia sans double authentification (2FA) — à activer
+    si elle est d'accord pour l'utiliser, vu que ce compte a accès à tous
+    les voyages
+  - Choix assumé, pas un bug : n'importe quel voyageur peut modifier/
+    supprimer les dépenses de n'importe qui d'autre du même voyage (esprit
+    "cagnotte entre amis")
 
 ### Appli installable (PWA)
 - ✅ Logo/icône (pin dégradé or/terracotta sur fond marine, cohérent avec
