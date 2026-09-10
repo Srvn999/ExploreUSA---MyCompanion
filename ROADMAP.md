@@ -261,6 +261,12 @@
   Supabase, une checklist n'a pas besoin de se synchroniser entre
   appareils et son contenu ne regarde qu'un seul voyageur
 
+- Convertisseur d'unités (Outils) : nouveau sous-onglet "Unités" à côté
+  du convertisseur €/$ — distance (miles/km), température (°F/°C),
+  poids (lb/kg, valeur de départ 50 lb = franchise bagage habituelle en
+  vol intérieur US) et essence (gallons US/litres), chaque bloc
+  bidirectionnel. Purement du calcul client, aucun appel réseau
+
 ## À faire
 
 ### Connexion & sécurité
