@@ -249,10 +249,18 @@
     flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
     font-family:'Manrope'; font-size:14px; font-weight:600; color:var(--ink);
   }
+  .translator-input-row{ display:flex; gap:8px; align-items:stretch; }
   .translator-panel textarea{
-    width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
+    flex:1; width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
     font-family:'Manrope'; font-size:14px; resize:vertical; color:var(--ink);
   }
+  .translator-tools{ display:flex; flex-direction:column; gap:8px; }
+  .tool-btn{
+    width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:var(--sand);
+    color:var(--navy); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .tool-btn.active{ background:var(--terracotta); border-color:var(--terracotta); color:#fff; }
+  .tool-btn:disabled{ opacity:.4; cursor:default; }
   .translator-result{
     margin-top:12px; background:var(--sand-dark); border-radius:12px; padding:14px;
     font-size:15px; font-weight:600; color:var(--navy); line-height:1.5;
@@ -880,7 +888,18 @@
             <option value="fr">🇫🇷 Français</option>
           </select>
         </div>
-        <textarea id="tradInput" rows="3" placeholder="Tapez votre texte à traduire..."></textarea>
+        <div class="translator-input-row">
+          <textarea id="tradInput" rows="3" placeholder="Tapez, dictez ou photographiez un texte..."></textarea>
+          <div class="translator-tools">
+            <button type="button" id="tradMicBtn" class="tool-btn" onclick="toggleVoiceInput()" title="Dicter">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+            </button>
+            <button type="button" id="tradCameraBtn" class="tool-btn" onclick="document.getElementById('tradCameraInput').click()" title="Photographier un texte">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            </button>
+          </div>
+        </div>
+        <input type="file" id="tradCameraInput" accept="image/*" capture="environment" hidden onchange="handleTradPhoto(this.files[0]); this.value='';">
         <button type="button" onclick="runTranslate()" style="background:var(--navy); color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer; width:100%; margin-top:10px;">Traduire</button>
         <div id="tradResult" class="translator-result" hidden></div>
         <p id="tradStatus" style="font-size:12px; color:#8a8470; min-height:16px; margin:8px 0 0;"></p>
@@ -1304,6 +1323,9 @@
 </div>
 </div>
 
+<!-- Lecture de texte sur une photo (traducteur, outil "Traducteur") :
+     tourne entièrement dans le navigateur, aucune clé ni compte requis. -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script>
   const RATE = 1.09;
 
@@ -1414,6 +1436,80 @@
       statusEl.textContent = '';
     } else {
       statusEl.textContent = "Traduction indisponible pour l'instant, réessayez.";
+    }
+  }
+
+  // ---- Saisie vocale (reconnaissance native du navigateur — bien
+  // supportée sur Chrome/Android, absente/limitée sur iPhone/Safari :
+  // le bouton se masque simplement si l'appareil ne la propose pas) ----
+  const TRAD_SPEECH_LANGS = { fr: 'fr-FR', en: 'en-US', es: 'es-ES' };
+  let tradRecognition = null;
+  let tradListening = false;
+
+  function initVoiceInput(){
+    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('tradMicBtn');
+    if(!Ctor){ if(micBtn) micBtn.style.display = 'none'; return; }
+    tradRecognition = new Ctor();
+    tradRecognition.interimResults = false;
+    tradRecognition.maxAlternatives = 1;
+    tradRecognition.onresult = function(e){
+      document.getElementById('tradInput').value = e.results[0][0].transcript;
+    };
+    tradRecognition.onend = function(){
+      tradListening = false;
+      if(micBtn) micBtn.classList.remove('active');
+    };
+    tradRecognition.onerror = function(){
+      tradListening = false;
+      if(micBtn) micBtn.classList.remove('active');
+    };
+  }
+
+  function toggleVoiceInput(){
+    if(!tradRecognition) return;
+    const micBtn = document.getElementById('tradMicBtn');
+    if(tradListening){ tradRecognition.stop(); return; }
+    tradRecognition.lang = TRAD_SPEECH_LANGS[document.getElementById('tradFrom').value] || 'fr-FR';
+    tradListening = true;
+    if(micBtn) micBtn.classList.add('active');
+    try{ tradRecognition.start(); }
+    catch(err){ tradListening = false; if(micBtn) micBtn.classList.remove('active'); }
+  }
+
+  initVoiceInput();
+
+  // ---- Photo -> texte (OCR, entièrement dans le navigateur) ----
+  const TRAD_OCR_LANGS = { fr: 'fra', en: 'eng', es: 'spa' };
+
+  async function handleTradPhoto(file){
+    if(!file) return;
+    const statusEl = document.getElementById('tradStatus');
+    const cameraBtn = document.getElementById('tradCameraBtn');
+    const check = window.MyCompanion && window.MyCompanion.validateUpload
+      ? window.MyCompanion.validateUpload(file, { maxBytes: 15*1024*1024, allowedPrefixes: ['image/'] })
+      : { ok: true };
+    if(!check.ok){ statusEl.textContent = check.message; return; }
+    if(!window.Tesseract){ statusEl.textContent = "Lecture de photo indisponible pour l'instant."; return; }
+
+    if(cameraBtn) cameraBtn.disabled = true;
+    statusEl.textContent = 'Lecture du texte en cours...';
+    document.getElementById('tradResult').hidden = true;
+    const lang = TRAD_OCR_LANGS[document.getElementById('tradFrom').value] || 'eng';
+    try{
+      const result = await window.Tesseract.recognize(file, lang);
+      const text = ((result && result.data && result.data.text) || '').trim();
+      if(text){
+        document.getElementById('tradInput').value = text;
+        statusEl.textContent = '';
+        runTranslate();
+      } else {
+        statusEl.textContent = 'Aucun texte détecté sur la photo, réessayez avec un cadrage plus net.';
+      }
+    } catch(err){
+      statusEl.textContent = 'Lecture de la photo impossible, réessayez.';
+    } finally {
+      if(cameraBtn) cameraBtn.disabled = false;
     }
   }
 

@@ -139,6 +139,20 @@
   Arizona/Californie, mais rien n'empêche un voyageur de l'utiliser
   ailleurs. `window.MyCompanion.translateText` dans `js/data.js`, UI
   inline dans `index.html` (`sub-trad`)
+- Traducteur : saisie vocale + photo (façon Google Lens)
+  - ✅ Saisie vocale : reconnaissance native du navigateur (Web Speech
+    API), aucune config. Bien supportée sur Chrome/Android ; le bouton
+    micro se masque simplement sur les appareils qui ne la proposent pas
+    (iPhone/Safari notamment — limite du navigateur, pas de l'appli)
+  - ✅ Photo → texte (OCR) : Tesseract.js, tourne entièrement dans le
+    navigateur du voyageur, aucune clé ni compte, aucun coût récurrent.
+    Choix assumé avec l'utilisateur : la précision est correcte sur du
+    texte imprimé net et bien cadré, mais en dessous d'une API cloud
+    payante (Google Vision/Azure) sur des menus stylisés, mal éclairés ou
+    de travers — solution à revoir si la qualité s'avère insuffisante en
+    usage réel, en passant alors par une fonction serveur dédiée (comme
+    send-itinerary-reminders) pour ne jamais exposer une clé payante
+    côté client
 
 ## À faire
 
