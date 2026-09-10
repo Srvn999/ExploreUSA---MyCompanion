@@ -1,7 +1,7 @@
 {
   "name": "My Companion",
   "short_name": "My Companion",
-  "description": "Votre compagnon de voyage ExploreUSA : itinéraire, vols, documents et messagerie avec votre conciergerie.",
+  "description": "Votre compagnon de voyage ExploreUSA : itinéraire, vols, documents et messagerie avec Alexia.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
