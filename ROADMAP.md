@@ -131,6 +131,14 @@
     de la version majeure seule — évite qu'une mise à jour de la
     librairie (légitime ou non) change silencieusement de comportement
     pour tous les utilisateurs sans revue de notre part
+- Traducteur dans Outils (3ᵉ sous-onglet, à côté du convertisseur €/$ et
+  de Taxes & Tips) : français ↔ anglais ↔ espagnol, via MyMemory (gratuit,
+  sans clé, comme la météo). L'espagnol est proposé au même niveau que
+  l'anglais plutôt que restreint à certains États — utile sur les
+  itinéraires façon Route 66 qui traversent Texas/Nouveau-Mexique/
+  Arizona/Californie, mais rien n'empêche un voyageur de l'utiliser
+  ailleurs. `window.MyCompanion.translateText` dans `js/data.js`, UI
+  inline dans `index.html` (`sub-trad`)
 
 ## À faire
 

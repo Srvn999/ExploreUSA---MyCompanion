@@ -319,6 +319,25 @@ window.MyCompanion.geocodeLabel = async function (label) {
   }
 };
 
+// Traduction courte (outil "Traducteur" dans Outils), via MyMemory
+// (gratuit, sans clé). Pensé pour de courtes phrases du quotidien en
+// voyage — pas pour de gros volumes de texte.
+window.MyCompanion.translateText = async function (text, fromLang, toLang) {
+  if (!text || !fromLang || !toLang) return null;
+  try {
+    var res = await fetch(
+      'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) +
+        '&langpair=' + encodeURIComponent(fromLang) + '|' + encodeURIComponent(toLang)
+    );
+    var data = await res.json();
+    var translated = data && data.responseData && data.responseData.translatedText;
+    return translated || null;
+  } catch (err) {
+    console.warn('[MyCompanion] Traduction indisponible', err);
+    return null;
+  }
+};
+
 // Distance à vol d'oiseau (formule de Haversine), en kilomètres.
 window.MyCompanion.distanceKm = function (lat1, lon1, lat2, lon2) {
   var toRad = function (deg) { return (deg * Math.PI) / 180; };

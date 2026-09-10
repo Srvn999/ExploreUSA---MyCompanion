@@ -243,6 +243,20 @@
   .tip-explainer p{ font-size:12.5px; color:#5b5748; line-height:1.5; margin:0 0 10px; }
   .tip-explainer p:last-child{ margin-bottom:0; }
   .tip-explainer b{ color:var(--navy); }
+  .translator-panel{ background:var(--white); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:16px; }
+  .translator-langs{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .translator-langs select{
+    flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    font-family:'Manrope'; font-size:14px; font-weight:600; color:var(--ink);
+  }
+  .translator-panel textarea{
+    width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
+    font-family:'Manrope'; font-size:14px; resize:vertical; color:var(--ink);
+  }
+  .translator-result{
+    margin-top:12px; background:var(--sand-dark); border-radius:12px; padding:14px;
+    font-size:15px; font-weight:600; color:var(--navy); line-height:1.5;
+  }
   .rt-row{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; color:#5b5748;}
   .rt-row.grand{font-size:18px; font-weight:800; color:var(--navy); margin-top:8px;}
   .rt-row span:last-child{font-variant-numeric:tabular-nums;}
@@ -775,6 +789,7 @@
     <div class="subtabs">
       <div class="subtab active" id="subtab-conv" onclick="showSub('conv')">Convertisseur €/$</div>
       <div class="subtab" id="subtab-tips" onclick="showSub('tips')">Taxes &amp; Tips</div>
+      <div class="subtab" id="subtab-trad" onclick="showSub('trad')">Traducteur</div>
     </div>
 
     <div id="sub-conv">
@@ -845,6 +860,34 @@
           le pourboire est déjà compté dans l'addition — inutile d'en
           rajouter un (sauf si vous voulez remercier davantage).
         </p>
+      </div>
+    </div>
+
+    <div id="sub-trad" style="display:none;">
+      <div class="translator-panel">
+        <div class="translator-langs">
+          <select id="tradFrom">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇬🇧 Anglais</option>
+            <option value="es">🇪🇸 Espagnol</option>
+          </select>
+          <div class="swap" onclick="swapTranslator()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
+          </div>
+          <select id="tradTo">
+            <option value="en">🇬🇧 Anglais</option>
+            <option value="es">🇪🇸 Espagnol</option>
+            <option value="fr">🇫🇷 Français</option>
+          </select>
+        </div>
+        <textarea id="tradInput" rows="3" placeholder="Tapez votre texte à traduire..."></textarea>
+        <button type="button" onclick="runTranslate()" style="background:var(--navy); color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer; width:100%; margin-top:10px;">Traduire</button>
+        <div id="tradResult" class="translator-result" hidden></div>
+        <p id="tradStatus" style="font-size:12px; color:#8a8470; min-height:16px; margin:8px 0 0;"></p>
+      </div>
+      <div class="tip-explainer">
+        <h4>🌎 Un petit plus selon les États</h4>
+        <p>Au Texas, Nouveau-Mexique, Arizona ou en Californie, l'espagnol peut être tout aussi utile que l'anglais avec certains commerçants — n'hésitez pas à basculer dessus si l'anglais ne passe pas.</p>
       </div>
     </div>
   </div>
@@ -1287,8 +1330,10 @@
   function showSub(which){
     document.getElementById('subtab-conv').classList.toggle('active', which==='conv');
     document.getElementById('subtab-tips').classList.toggle('active', which==='tips');
+    document.getElementById('subtab-trad').classList.toggle('active', which==='trad');
     document.getElementById('sub-conv').style.display = which==='conv' ? 'block':'none';
     document.getElementById('sub-tips').style.display = which==='tips' ? 'block':'none';
+    document.getElementById('sub-trad').style.display = which==='trad' ? 'block':'none';
   }
 
   let direction = 'eur-usd';
@@ -1334,6 +1379,42 @@
     document.getElementById('rTax').textContent = '$'+tax.toFixed(2);
     document.getElementById('rTip').textContent = '$'+tip.toFixed(2)+' ('+Math.round(satRate*100)+'%)';
     document.getElementById('rTotal').textContent = '$'+total.toFixed(2);
+  }
+
+  function swapTranslator(){
+    const fromSel = document.getElementById('tradFrom');
+    const toSel = document.getElementById('tradTo');
+    const tmp = fromSel.value;
+    fromSel.value = toSel.value;
+    toSel.value = tmp;
+  }
+
+  async function runTranslate(){
+    const input = document.getElementById('tradInput');
+    const resultEl = document.getElementById('tradResult');
+    const statusEl = document.getElementById('tradStatus');
+    const text = input.value.trim();
+    if(!text){ statusEl.textContent = ''; resultEl.hidden = true; return; }
+    const from = document.getElementById('tradFrom').value;
+    const to = document.getElementById('tradTo').value;
+    if(from === to){
+      resultEl.textContent = text;
+      resultEl.hidden = false;
+      statusEl.textContent = '';
+      return;
+    }
+    statusEl.textContent = 'Traduction en cours...';
+    resultEl.hidden = true;
+    const translated = window.MyCompanion && window.MyCompanion.translateText
+      ? await window.MyCompanion.translateText(text, from, to)
+      : null;
+    if(translated){
+      resultEl.textContent = translated;
+      resultEl.hidden = false;
+      statusEl.textContent = '';
+    } else {
+      statusEl.textContent = "Traduction indisponible pour l'instant, réessayez.";
+    }
   }
 
   function toggleBP(id){
