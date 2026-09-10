@@ -186,6 +186,18 @@
   l'indique maintenant au lieu de ne rien faire silencieusement. Cache
   vidé à la déconnexion (`signOut`), pour un appareil parfois partagé en
   famille/groupe d'amis
+- Vue carte globale de l'itinéraire : bouton "Carte" en haut de l'onglet
+  Itinéraire, ouvre un écran dédié avec toutes les étapes du voyage
+  repérées sur une carte (Leaflet + tuiles OpenStreetMap, gratuit et
+  sans clé, même logique que la météo/le géocodage déjà en place). Les
+  étapes programmées sont reliées par un tracé en pointillés dans l'ordre
+  du voyage ; les suggestions libres d'Alexia pour le temps libre
+  apparaissent en plus, dans une couleur différente. Chaque point ouvre
+  une bulle avec le nom du lieu et le jour. Géocodage fait à la volée à
+  l'ouverture de l'écran seulement (pas au chargement du voyage), avec
+  mise en cache en mémoire pour ne pas re-géocoder deux étapes au même
+  endroit ni recommencer à chaque réouverture de l'écran dans la même
+  session
 
 ## À faire
 

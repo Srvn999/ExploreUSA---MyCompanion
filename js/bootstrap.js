@@ -34,6 +34,7 @@
 
       window.MyCompanion.renderHome(bundle.trip, traveler, bundle.days);
       window.MyCompanion.renderItinerary(bundle.days);
+      if (window.MyCompanion.setItineraryMapDays) window.MyCompanion.setItineraryMapDays(bundle.days);
       window.MyCompanion.renderFlights(bundle.flights);
       window.MyCompanion.renderAlbum(bundle.days, bundle.photos, bundle.travelers);
       window.MyCompanion.renderAlbumPreview(bundle.photos);

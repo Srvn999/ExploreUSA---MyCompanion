@@ -34,6 +34,7 @@
 <meta name="apple-mobile-web-app-title" content="My Companion">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <style>
   :root{
     --navy:#1C2B45;
@@ -616,6 +617,17 @@
   }
   .back-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+  .map-btn{
+    flex-shrink:0; display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px;
+    font-size:12.5px; font-weight:700; font-family:'Manrope'; background:var(--white);
+    border:1px solid var(--line); color:var(--terracotta-dark); cursor:pointer;
+  }
+  .itinerary-map{
+    height:55vh; min-height:320px; border-radius:14px; overflow:hidden; border:1px solid var(--line);
+    background:var(--white);
+  }
+  .itinerary-map .leaflet-popup-content{ font-family:'Manrope'; font-size:12.5px; }
+
   .offline-banner{
     display:none; align-items:center; justify-content:center; gap:6px; flex-shrink:0;
     background:var(--gold); color:var(--navy); font-family:'Manrope'; font-size:11.5px; font-weight:700;
@@ -749,7 +761,13 @@
     </div>
   </div>
   <div class="screen" id="screen-itineraire">
-    <div class="trip-header"><div><div class="eyebrow">Votre roadbook</div><h1>Itinéraire</h1></div></div>
+    <div class="trip-header">
+      <div><div class="eyebrow">Votre roadbook</div><h1>Itinéraire</h1></div>
+      <button type="button" class="map-btn" onclick="showTab('itineraire-map'); if(window.MyCompanion.openItineraryMap) window.MyCompanion.openItineraryMap();">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+        Carte
+      </button>
+    </div>
     <div class="day-pills" id="daypills"></div>
     <div class="timeline" id="itineraryTimeline">
       <div class="titem">
@@ -803,6 +821,18 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- ITINERAIRE : VUE CARTE GLOBALE -->
+  <div class="screen" id="screen-itineraire-map">
+    <div class="album-header">
+      <div class="back-arrow" onclick="history.back()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Carte du voyage</h1>
+    </div>
+    <p class="caption" id="itineraryMapStatus" style="margin-bottom:10px;">Chargement de la carte...</p>
+    <div id="itineraryMapEl" class="itinerary-map"></div>
   </div>
 
   <!-- ITINERAIRE : FICHE DETAIL D'UNE ETAPE -->
@@ -1362,6 +1392,7 @@
 <!-- Lecture de texte sur une photo (traducteur, outil "Traducteur") :
      tourne entièrement dans le navigateur, aucune clé ni compte requis. -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   const RATE = 1.09;
 
@@ -1654,6 +1685,7 @@
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
 <script src="js/render.js"></script>
+<script src="js/tripMap.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/albumUpload.js"></script>
 <script src="js/expenses.js"></script>
