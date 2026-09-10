@@ -226,6 +226,15 @@
   par My Companion, uniquement ce qu'Alexia rédige elle-même. Migration
   `0015_culture_tips.sql` à appliquer une fois dans Supabase (SQL editor)
 
+- Bouton SOS (partage de position) : nouvelle carte en haut de l'écran
+  Urgences, deux boutons "Par SMS" / "WhatsApp" qui pré-remplissent un
+  message avec le nom du voyage et un lien Google Maps vers la position
+  GPS actuelle du voyageur — il choisit ensuite lui-même le contact à
+  qui l'envoyer dans son propre carnet d'adresses/WhatsApp. Rien n'est
+  stocké côté serveur, aucun numéro de contact demandé ni conservé par
+  l'appli : la position ne quitte l'appareil que dans le message que le
+  voyageur envoie lui-même (js/sos.js)
+
 ## À faire
 
 ### Connexion & sécurité

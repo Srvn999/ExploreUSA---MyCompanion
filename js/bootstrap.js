@@ -41,6 +41,7 @@
       window.MyCompanion.renderDocuments(bundle.documents);
       window.MyCompanion.renderRentalCar(bundle.rentalCar);
       window.MyCompanion.renderUrgences(bundle.trip, bundle.documents);
+      if (window.MyCompanion.initSos) window.MyCompanion.initSos(bundle.trip);
       window.MyCompanion.renderWeatherDays(bundle.days);
       if (window.MyCompanion.initWeatherSearch) window.MyCompanion.initWeatherSearch();
       window.MyCompanion.renderStateTaxOptions(bundle.days);

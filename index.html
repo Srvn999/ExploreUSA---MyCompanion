@@ -498,6 +498,16 @@
     background:var(--sand-dark); border-radius:14px; padding:14px; font-size:12.5px; color:var(--ink);
     line-height:1.5; margin-top:6px; white-space:pre-line;
   }
+  .sos-card{ background:var(--white); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:14px; }
+  .sos-card h4{ font-size:14px; font-weight:700; color:var(--navy); margin:0 0 3px; }
+  .sos-card p{ font-size:12px; color:#8a8470; margin:0 0 12px; }
+  .sos-actions{ display:flex; gap:10px; }
+  .sos-btn{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:11px 10px;
+    border-radius:12px; border:none; background:var(--terracotta); color:#fff; font-family:'Manrope';
+    font-weight:700; font-size:12.5px; cursor:pointer;
+  }
+  .sos-btn.secondary{ background:var(--navy); }
   .rental-card{
     background:var(--white); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:20px;
   }
@@ -1230,6 +1240,15 @@
       </div>
       <h1 style="font-size:20px;">Urgences</h1>
     </div>
+    <div class="sos-card">
+      <h4>📍 Besoin d'aide, prévenir quelqu'un ?</h4>
+      <p>Envoyez votre position actuelle à un proche, par SMS ou WhatsApp.</p>
+      <div class="sos-actions">
+        <button type="button" class="sos-btn" id="sosSmsBtn">📱 Par SMS</button>
+        <button type="button" class="sos-btn secondary" id="sosWhatsappBtn">💬 WhatsApp</button>
+      </div>
+      <p class="caption" id="sosStatus" style="margin:8px 0 0;"></p>
+    </div>
     <div id="emergencyList"></div>
   </div>
 
@@ -1717,6 +1736,7 @@
 <script src="js/data.js"></script>
 <script src="js/render.js"></script>
 <script src="js/tripMap.js"></script>
+<script src="js/sos.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/albumUpload.js"></script>
 <script src="js/expenses.js"></script>
