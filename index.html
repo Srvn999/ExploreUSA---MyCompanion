@@ -217,6 +217,16 @@
     border-radius:10px; padding:10px 12px; color:#fff; font-size:17px; font-family:'Manrope'; font-weight:700;
   }
   .swap{width:34px; height:34px; border-radius:50%; background:var(--terracotta); display:flex; align-items:center; justify-content:center; color:#fff; margin-top:16px; flex-shrink:0; cursor:pointer;}
+  .unit-card{ background:var(--white); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+  .unit-card h4{ font-size:13.5px; font-weight:700; color:var(--navy); margin:0 0 10px; }
+  .unit-row{ display:flex; align-items:center; gap:10px; }
+  .unit-field{ flex:1; min-width:0; }
+  .unit-field label{ font-size:11px; color:#8a8470; display:block; margin-bottom:4px; }
+  .unit-field input{
+    width:100%; background:var(--sand-dark); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; color:var(--navy); font-size:15px; font-family:'Manrope'; font-weight:700;
+  }
+  .unit-eq{ font-size:14px; color:#8a8470; font-weight:700; flex-shrink:0; padding-top:16px; }
   .receipt{
     background:var(--white); border-radius:4px; padding:20px 18px; position:relative;
     box-shadow:0 10px 20px -12px rgba(28,20,10,0.25);
@@ -927,6 +937,7 @@
       <div class="subtab active" id="subtab-conv" onclick="showSub('conv')">Convertisseur €/$</div>
       <div class="subtab" id="subtab-tips" onclick="showSub('tips')">Taxes &amp; Tips</div>
       <div class="subtab" id="subtab-trad" onclick="showSub('trad')">Traducteur</div>
+      <div class="subtab" id="subtab-unit" onclick="showSub('unit')">Unités</div>
     </div>
 
     <div id="sub-conv">
@@ -1046,6 +1057,42 @@
       <div class="tip-explainer">
         <h4>🌎 Un petit plus selon les États</h4>
         <p>Au Texas, Nouveau-Mexique, Arizona ou en Californie, l'espagnol peut être tout aussi utile que l'anglais avec certains commerçants — n'hésitez pas à basculer dessus si l'anglais ne passe pas.</p>
+      </div>
+    </div>
+
+    <div id="sub-unit" style="display:none;">
+      <div class="unit-card">
+        <h4>📏 Distance</h4>
+        <div class="unit-row">
+          <div class="unit-field"><label>Miles</label><input type="number" id="unitMilesInput" value="100" oninput="convertDistance('miles')"></div>
+          <div class="unit-eq">=</div>
+          <div class="unit-field"><label>Kilomètres</label><input type="number" id="unitKmInput" value="160.93" oninput="convertDistance('km')"></div>
+        </div>
+      </div>
+      <div class="unit-card">
+        <h4>🌡️ Température</h4>
+        <div class="unit-row">
+          <div class="unit-field"><label>°Fahrenheit</label><input type="number" id="unitFInput" value="70" oninput="convertTemp('f')"></div>
+          <div class="unit-eq">=</div>
+          <div class="unit-field"><label>°Celsius</label><input type="number" id="unitCInput" value="21.1" oninput="convertTemp('c')"></div>
+        </div>
+      </div>
+      <div class="unit-card">
+        <h4>🧳 Poids (bagages)</h4>
+        <div class="unit-row">
+          <div class="unit-field"><label>Livres (lb)</label><input type="number" id="unitLbInput" value="50" oninput="convertWeight('lb')"></div>
+          <div class="unit-eq">=</div>
+          <div class="unit-field"><label>Kilogrammes</label><input type="number" id="unitKgInput" value="22.68" oninput="convertWeight('kg')"></div>
+        </div>
+        <p class="caption" style="margin:8px 0 0;">50 lb : franchise bagage habituelle en vol intérieur US</p>
+      </div>
+      <div class="unit-card">
+        <h4>⛽ Essence</h4>
+        <div class="unit-row">
+          <div class="unit-field"><label>Gallons (US)</label><input type="number" id="unitGalInput" value="1" oninput="convertVolume('gal')"></div>
+          <div class="unit-eq">=</div>
+          <div class="unit-field"><label>Litres</label><input type="number" id="unitLInput" value="3.79" oninput="convertVolume('l')"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1593,9 +1640,51 @@
     document.getElementById('subtab-conv').classList.toggle('active', which==='conv');
     document.getElementById('subtab-tips').classList.toggle('active', which==='tips');
     document.getElementById('subtab-trad').classList.toggle('active', which==='trad');
+    document.getElementById('subtab-unit').classList.toggle('active', which==='unit');
     document.getElementById('sub-conv').style.display = which==='conv' ? 'block':'none';
     document.getElementById('sub-tips').style.display = which==='tips' ? 'block':'none';
     document.getElementById('sub-trad').style.display = which==='trad' ? 'block':'none';
+    document.getElementById('sub-unit').style.display = which==='unit' ? 'block':'none';
+  }
+
+  // Convertisseurs d'unités (Outils > Unités) : les Etats-Unis utilisent
+  // encore les unités impériales (miles, Fahrenheit, livres, gallons) au
+  // quotidien plutôt que le système métrique.
+  function convertDistance(from){
+    if(from==='miles'){
+      const mi = parseFloat(document.getElementById('unitMilesInput').value)||0;
+      document.getElementById('unitKmInput').value = (mi*1.60934).toFixed(2);
+    } else {
+      const km = parseFloat(document.getElementById('unitKmInput').value)||0;
+      document.getElementById('unitMilesInput').value = (km/1.60934).toFixed(2);
+    }
+  }
+  function convertTemp(from){
+    if(from==='f'){
+      const f = parseFloat(document.getElementById('unitFInput').value)||0;
+      document.getElementById('unitCInput').value = ((f-32)*5/9).toFixed(1);
+    } else {
+      const c = parseFloat(document.getElementById('unitCInput').value)||0;
+      document.getElementById('unitFInput').value = (c*9/5+32).toFixed(1);
+    }
+  }
+  function convertWeight(from){
+    if(from==='lb'){
+      const lb = parseFloat(document.getElementById('unitLbInput').value)||0;
+      document.getElementById('unitKgInput').value = (lb*0.453592).toFixed(2);
+    } else {
+      const kg = parseFloat(document.getElementById('unitKgInput').value)||0;
+      document.getElementById('unitLbInput').value = (kg/0.453592).toFixed(2);
+    }
+  }
+  function convertVolume(from){
+    if(from==='gal'){
+      const gal = parseFloat(document.getElementById('unitGalInput').value)||0;
+      document.getElementById('unitLInput').value = (gal*3.78541).toFixed(2);
+    } else {
+      const l = parseFloat(document.getElementById('unitLInput').value)||0;
+      document.getElementById('unitGalInput').value = (l/3.78541).toFixed(2);
+    }
   }
 
   let direction = 'eur-usd';
