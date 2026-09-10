@@ -250,9 +250,15 @@
     font-family:'Manrope'; font-size:14px; font-weight:600; color:var(--ink);
   }
   .translator-input-row{ display:flex; gap:8px; align-items:stretch; }
+  .translator-textarea-wrap{ position:relative; flex:1; }
   .translator-panel textarea{
-    flex:1; width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
-    font-family:'Manrope'; font-size:14px; resize:vertical; color:var(--ink);
+    width:100%; padding:12px 34px 12px 12px; border-radius:10px; border:1px solid var(--line);
+    font-family:'Manrope'; font-size:14px; resize:none; color:var(--ink);
+  }
+  .translator-clear{
+    position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%;
+    border:none; background:var(--sand-dark); color:#6b6656; display:flex; align-items:center;
+    justify-content:center; cursor:pointer; padding:0;
   }
   .translator-tools{ display:flex; flex-direction:column; gap:8px; }
   .tool-btn{
@@ -889,7 +895,12 @@
           </select>
         </div>
         <div class="translator-input-row">
-          <textarea id="tradInput" rows="3" placeholder="Tapez, dictez ou photographiez un texte..."></textarea>
+          <div class="translator-textarea-wrap">
+            <textarea id="tradInput" rows="3" placeholder="Tapez, dictez ou photographiez un texte..." oninput="onTradInputChange()"></textarea>
+            <button type="button" id="tradClearBtn" class="translator-clear" onclick="clearTradInput()" title="Effacer" hidden>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
           <div class="translator-tools">
             <button type="button" id="tradMicBtn" class="tool-btn" onclick="toggleVoiceInput()" title="Dicter">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
@@ -1403,6 +1414,21 @@
     document.getElementById('rTotal').textContent = '$'+total.toFixed(2);
   }
 
+  function onTradInputChange(){
+    const input = document.getElementById('tradInput');
+    const clearBtn = document.getElementById('tradClearBtn');
+    if(clearBtn) clearBtn.hidden = !input.value;
+  }
+
+  function clearTradInput(){
+    const input = document.getElementById('tradInput');
+    input.value = '';
+    onTradInputChange();
+    document.getElementById('tradResult').hidden = true;
+    document.getElementById('tradStatus').textContent = '';
+    input.focus();
+  }
+
   function swapTranslator(){
     const fromSel = document.getElementById('tradFrom');
     const toSel = document.getElementById('tradTo');
@@ -1455,6 +1481,7 @@
     tradRecognition.maxAlternatives = 1;
     tradRecognition.onresult = function(e){
       document.getElementById('tradInput').value = e.results[0][0].transcript;
+      onTradInputChange();
     };
     tradRecognition.onend = function(){
       tradListening = false;
@@ -1501,6 +1528,7 @@
       const text = ((result && result.data && result.data.text) || '').trim();
       if(text){
         document.getElementById('tradInput').value = text;
+        onTradInputChange();
         statusEl.textContent = '';
         runTranslate();
       } else {
