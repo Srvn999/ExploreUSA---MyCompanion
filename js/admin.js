@@ -12,6 +12,7 @@
   var editingTravelerId = null;
   var currentRentalCarId = null;
   var editingEsimGuideId = null;
+  var editingCultureTipId = null;
   var messagesChannel = null;
 
   var TYPE_LABELS = { hotel: 'Hôtel', activity: 'Activité', restaurant: 'Restaurant' };
@@ -68,6 +69,7 @@
     $('logoutBtn').addEventListener('click', onLogout);
     $('newTripBtn').addEventListener('click', function () {
       $('esimGuidesPanel').hidden = true;
+      $('cultureTipsPanel').hidden = true;
       $('newTripCard').hidden = false;
     });
     $('cancelNewTrip').addEventListener('click', function () { $('newTripCard').hidden = true; });
@@ -88,6 +90,8 @@
     $('adminChatForm').addEventListener('submit', onSendAdminMessage);
     $('esimGuidesBtn').addEventListener('click', showEsimGuidesPanel);
     $('esimGuideForm').addEventListener('submit', onAddEsimGuide);
+    $('cultureTipsBtn').addEventListener('click', showCultureTipsPanel);
+    $('cultureTipForm').addEventListener('submit', onAddCultureTip);
 
     Array.prototype.forEach.call(document.querySelectorAll('.tab-btn'), function (btn) {
       btn.addEventListener('click', function () { switchTab(btn.dataset.tab); });
@@ -184,6 +188,7 @@
       el.classList.toggle('active', el.dataset.tripId === tripId);
     });
     $('esimGuidesPanel').hidden = true;
+    $('cultureTipsPanel').hidden = true;
     $('noTripSelected').hidden = true;
     $('tripEditor').hidden = false;
 
@@ -923,7 +928,7 @@
         var table = {
           traveler: 'travelers', item: 'itinerary_items', day: 'itinerary_days', flight: 'flights',
           document: 'documents', esimguide: 'esim_guides', itemphoto: 'itinerary_item_photos',
-          daytip: 'day_tips',
+          daytip: 'day_tips', culturetip: 'culture_tips',
         }[btn.dataset.kind];
         if (!table) return;
         var res = await supabase.from(table).delete().eq('id', btn.dataset.id);
@@ -933,6 +938,7 @@
         else if (table === 'flights') await loadFlights();
         else if (table === 'documents') await loadDocuments();
         else if (table === 'esim_guides') await loadEsimGuides();
+        else if (table === 'culture_tips') await loadCultureTips();
       });
     });
   }
@@ -948,6 +954,7 @@
     currentTripId = null;
     $('noTripSelected').hidden = true;
     $('tripEditor').hidden = true;
+    $('cultureTipsPanel').hidden = true;
     $('esimGuidesPanel').hidden = false;
     loadEsimGuides();
   }
@@ -1016,6 +1023,91 @@
     if (res.error) { alert('Erreur : ' + res.error.message); return; }
     editingEsimGuideId = null;
     await loadEsimGuides();
+  }
+
+  // ---------------------------------------------------------------
+  // FICHES "BON A SAVOIR" (bibliothèque partagée, indépendante d'un
+  // voyage — même logique que les guides e-SIM ci-dessus)
+  // ---------------------------------------------------------------
+
+  function showCultureTipsPanel() {
+    Array.prototype.forEach.call(document.querySelectorAll('.trip-item'), function (el) {
+      el.classList.remove('active');
+    });
+    currentTripId = null;
+    $('noTripSelected').hidden = true;
+    $('tripEditor').hidden = true;
+    $('esimGuidesPanel').hidden = true;
+    $('cultureTipsPanel').hidden = false;
+    loadCultureTips();
+  }
+
+  async function loadCultureTips() {
+    var res = await supabase.from('culture_tips').select('*').order('sort_order').order('title');
+    if (res.error) { console.warn(res.error); return; }
+    var container = $('cultureTipsList');
+    container.innerHTML = (res.data || [])
+      .map(function (t) {
+        if (t.id === editingCultureTipId) {
+          return (
+            '<div class="card"><form class="inline culture-edit-form" data-tip-id="' + t.id + '">' +
+            '<div class="field"><label>Titre</label><input type="text" name="title" required value="' + escapeHtml(t.title) + '"></div>' +
+            '<div class="field"><label>Emoji</label><input type="text" name="icon_emoji" maxlength="4" style="width:70px;" value="' + escapeHtml(t.icon_emoji || '') + '"></div>' +
+            '<div class="field"><label>États concernés</label><input type="text" name="states" style="width:220px;" value="' + escapeHtml(t.states || '') + '"></div>' +
+            '<div class="field" style="flex:1 1 100%;"><label>Texte</label>' +
+            '<textarea name="body" rows="5" style="width:100%;font-family:\'Manrope\';font-size:14px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);" required>' + escapeHtml(t.body || '') + '</textarea></div>' +
+            '<button class="primary" type="submit">Enregistrer</button> ' +
+            '<button class="ghost" type="button" data-kind="cancel-edit-culturetip">Annuler</button>' +
+            '</form></div>'
+          );
+        }
+        return (
+          '<div class="item-row"><div><b>' + (t.icon_emoji ? escapeHtml(t.icon_emoji) + ' ' : '') + escapeHtml(t.title) + '</b>' +
+          (t.states ? '<div class="meta">' + escapeHtml(t.states) + '</div>' : '') + '</div>' +
+          '<span><button class="ghost" data-id="' + t.id + '" data-kind="edit-culturetip">Modifier</button> ' +
+          '<button class="danger" data-id="' + t.id + '" data-kind="culturetip">Supprimer</button></span></div>'
+        );
+      })
+      .join('') || '<p class="meta">Aucune fiche pour l\'instant.</p>';
+
+    Array.prototype.forEach.call(container.querySelectorAll('.culture-edit-form'), function (form) {
+      form.addEventListener('submit', onSaveCultureTip);
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="edit-culturetip"]'), function (btn) {
+      btn.addEventListener('click', function () { editingCultureTipId = btn.dataset.id; loadCultureTips(); });
+    });
+    Array.prototype.forEach.call(container.querySelectorAll('[data-kind="cancel-edit-culturetip"]'), function (btn) {
+      btn.addEventListener('click', function () { editingCultureTipId = null; loadCultureTips(); });
+    });
+    wireDeleteButtons(container);
+  }
+
+  async function onAddCultureTip(e) {
+    e.preventDefault();
+    var form = e.target;
+    var res = await supabase.from('culture_tips').insert({
+      title: form.title.value.trim(),
+      icon_emoji: form.icon_emoji.value.trim() || null,
+      states: form.states.value.trim() || null,
+      body: form.body.value.trim(),
+    });
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    form.reset();
+    await loadCultureTips();
+  }
+
+  async function onSaveCultureTip(e) {
+    e.preventDefault();
+    var form = e.target;
+    var res = await supabase.from('culture_tips').update({
+      title: form.title.value.trim(),
+      icon_emoji: form.icon_emoji.value.trim() || null,
+      states: form.states.value.trim() || null,
+      body: form.body.value.trim(),
+    }).eq('id', form.dataset.tipId);
+    if (res.error) { alert('Erreur : ' + res.error.message); return; }
+    editingCultureTipId = null;
+    await loadCultureTips();
   }
 
   document.addEventListener('DOMContentLoaded', init);

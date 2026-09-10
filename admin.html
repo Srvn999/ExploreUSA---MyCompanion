@@ -170,6 +170,7 @@
     <button class="primary" id="newTripBtn">+ Nouveau voyage</button>
     <div class="trip-list" id="tripList"></div>
     <button class="ghost" id="esimGuidesBtn">📶 Guides e-SIM</button>
+    <button class="ghost" id="cultureTipsBtn">🧭 Fiches "bon à savoir"</button>
     <button class="ghost" id="logoutBtn">Se déconnecter</button>
   </aside>
 
@@ -209,6 +210,29 @@
         </form>
       </div>
       <div id="esimGuidesList"></div>
+    </div>
+
+    <div id="cultureTipsPanel" hidden>
+      <h2>Fiches "bon à savoir"</h2>
+      <p style="font-size:12.5px;color:#6b6656;max-width:520px;">
+        Repères culturels et pratiques (pourboires, essence, code de la
+        route américain...) affichés dans l'onglet "Plus" de tous les
+        voyages. Comme pour les guides e-SIM : à toi de rédiger, on
+        n'invente rien de précis à ta place.
+      </p>
+      <div class="card">
+        <h3>Ajouter une fiche</h3>
+        <form class="inline" id="cultureTipForm">
+          <div class="field"><label>Titre</label><input type="text" name="title" placeholder="Le pourboire aux USA" required></div>
+          <div class="field"><label>Emoji (optionnel)</label><input type="text" name="icon_emoji" placeholder="💵" maxlength="4" style="width:70px;"></div>
+          <div class="field"><label>États concernés (optionnel)</label><input type="text" name="states" placeholder="Texas, Nouveau-Mexique" style="width:220px;"></div>
+          <div class="field" style="flex:1 1 100%;"><label>Texte</label>
+            <textarea name="body" rows="5" style="width:100%;font-family:'Manrope';font-size:14px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);" placeholder="15 à 20% au restaurant, en espèces ou ajouté sur l'addition..." required></textarea>
+          </div>
+          <button class="primary" type="submit">Ajouter</button>
+        </form>
+      </div>
+      <div id="cultureTipsList"></div>
     </div>
 
     <div id="tripEditor" hidden>

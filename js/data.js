@@ -100,6 +100,19 @@ window.MyCompanion.fetchEsimGuides = async function () {
   return res.data || [];
 };
 
+// Bibliothèque de fiches "bon à savoir" culturelles, même logique que
+// les guides e-SIM (partagée entre tous les voyages).
+window.MyCompanion.fetchCultureTips = async function () {
+  var supabase = window.MyCompanion.client;
+  if (!supabase) return [];
+  var res = await supabase.from('culture_tips').select('*').order('sort_order').order('title');
+  if (res.error) {
+    console.warn('[MyCompanion] Erreur chargement fiches "bon à savoir"', res.error);
+    return [];
+  }
+  return res.data || [];
+};
+
 // Ajoute un "compagnon de route" au voyage : juste un prénom, sans email
 // ni compte, pour pouvoir lui attribuer des dépenses dans la cagnotte.
 window.MyCompanion.addCompanionTraveler = async function (tripId, displayName) {

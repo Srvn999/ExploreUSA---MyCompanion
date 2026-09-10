@@ -48,6 +48,9 @@
       window.MyCompanion.fetchEsimGuides().then(function (guides) {
         window.MyCompanion.renderEsimBrandList(guides);
       });
+      window.MyCompanion.fetchCultureTips().then(function (tips) {
+        window.MyCompanion.renderCultureTips(tips);
+      });
       window.MyCompanion.renderExpenses(bundle.expenses, bundle.travelers);
       if (window.MyCompanion.initExpenses) {
         // Rafraîchissement ciblé (dépenses + voyageurs) plutôt que de

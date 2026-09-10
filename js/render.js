@@ -1100,4 +1100,28 @@ window.MyCompanion = window.MyCompanion || {};
           .join('')
       : '<p style="color:#8a8470;font-size:13px;">Pas encore de détail pour cette marque — contactez Alexia.</p>';
   };
+
+  // ---- Fiches "bon à savoir" culturelles ----
+  window.MyCompanion.renderCultureTips = function (tips) {
+    var listEl = document.getElementById('cultureTipsListClient');
+    if (!listEl) return;
+
+    if (!tips || !tips.length) {
+      listEl.innerHTML = '<p style="color:#8a8470;font-size:13px;">Pas encore de fiche — revenez plus tard.</p>';
+      return;
+    }
+
+    listEl.innerHTML = tips
+      .map(function (t) {
+        return (
+          '<div class="culture-card">' +
+          '<div class="culture-ic">' + (t.icon_emoji ? escapeHtml(t.icon_emoji) : '🧭') + '</div>' +
+          '<div><h4>' + escapeHtml(t.title) + '</h4>' +
+          '<p>' + escapeHtml(t.body || '') + '</p>' +
+          (t.states ? '<span class="states-tag">' + escapeHtml(t.states) + '</span>' : '') +
+          '</div></div>'
+        );
+      })
+      .join('');
+  };
 })();

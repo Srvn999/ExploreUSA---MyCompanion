@@ -215,6 +215,16 @@
   contenu de `supabase/functions/notify-trip-update/index.ts`), avec
   "Verify JWT" laissé activé (à la différence de la fonction des
   rappels) — voir le fichier pour le détail
+- Fiches "bon à savoir" culturelles : nouvelle tuile dans l'onglet Plus,
+  bibliothèque de fiches (pourboires, essence, code de la route
+  américain...) rédigées et tenues à jour par Alexia depuis l'admin
+  (bouton "🧭 Fiches bon à savoir", nouvelle table `culture_tips`),
+  partagée entre tous les voyages — même mécanique que les guides e-SIM.
+  Chaque fiche a un titre, un emoji optionnel, un texte libre, et un
+  champ "États concernés" optionnel (affiché tel quel, purement
+  indicatif). Comme pour les guides e-SIM : jamais de contenu pré-rempli
+  par My Companion, uniquement ce qu'Alexia rédige elle-même. Migration
+  `0015_culture_tips.sql` à appliquer une fois dans Supabase (SQL editor)
 
 ## À faire
 

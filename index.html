@@ -609,6 +609,20 @@
   .esim-step p{ font-size:12px; color:#6b6656; margin:0; line-height:1.4; }
   .esim-step a, .esim-help a{ color:var(--terracotta-dark); font-weight:700; text-decoration:underline; }
   .esim-help{ text-align:center; font-size:12.5px; color:#8a8470; margin-top:16px; }
+  .culture-card{
+    display:flex; gap:12px; background:var(--white); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px;
+  }
+  .culture-ic{
+    width:34px; height:34px; flex-shrink:0; border-radius:50%; background:var(--sand-dark);
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .culture-card h4{font-size:13.5px; font-weight:700; color:var(--navy); margin:0 0 3px;}
+  .culture-card p{font-size:12.5px; color:#5b5748; margin:0; line-height:1.45; white-space:pre-wrap;}
+  .culture-card .states-tag{
+    display:inline-block; font-size:10.5px; font-weight:700; color:var(--terracotta-dark);
+    background:var(--sand-dark); border-radius:8px; padding:2px 8px; margin-top:7px;
+  }
   .back-toast{
     position:absolute; left:50%; bottom:100px; transform:translateX(-50%) translateY(10px);
     background:var(--navy); color:#fff; font-family:'Manrope'; font-size:12.5px; font-weight:700;
@@ -1069,6 +1083,11 @@
         <h4>Installer ma e-SIM</h4>
         <p>Guide pas-à-pas, consultable sans connexion</p>
       </div>
+      <div class="plus-tile" onclick="showTab('culture')" style="cursor:pointer;">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        <h4>Bon à savoir</h4>
+        <p>Pourboires, essence, code de la route... les repères utiles</p>
+      </div>
     </div>
     <p class="caption" style="cursor:pointer; text-decoration:underline;" onclick="if(confirm('Voulez-vous vraiment vous déconnecter ?')&&window.MyCompanion&&window.MyCompanion.signOut)window.MyCompanion.signOut();">Se déconnecter</p>
   </div>
@@ -1350,6 +1369,18 @@
     <p class="esim-help">
       Un souci d'installation ? <a href="#" onclick="showTab('chat');return false;">Écrivez à Alexia</a>.
     </p>
+  </div>
+
+  <!-- BON A SAVOIR (fiches culturelles, bibliothèque partagée) -->
+  <div class="screen" id="screen-culture">
+    <div class="album-header">
+      <div class="back-arrow" onclick="history.back()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <h1 style="font-size:20px;">Bon à savoir</h1>
+    </div>
+    <p class="caption" style="margin-bottom:14px;">Quelques repères culturels et pratiques pour votre séjour, par Alexia.</p>
+    <div id="cultureTipsListClient"></div>
   </div>
 
   <div class="tabbar">
