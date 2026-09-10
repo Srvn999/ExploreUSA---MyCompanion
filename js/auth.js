@@ -68,6 +68,9 @@ window.MyCompanion = window.MyCompanion || {};
   window.MyCompanion.signOut = async function () {
     var supabase = window.MyCompanion.client;
     if (supabase) await supabase.auth.signOut();
+    // Appareil parfois partagé (famille, groupe d'amis) : on ne laisse pas
+    // le voyage consultable hors-ligne après la déconnexion.
+    if (window.MyCompanion.clearOfflineCache) window.MyCompanion.clearOfflineCache();
     location.reload();
   };
 
@@ -101,31 +104,49 @@ window.MyCompanion = window.MyCompanion || {};
     }
 
     async function evaluate() {
-      var sessionRes = await supabase.auth.getSession();
-      var session = sessionRes.data.session;
-      if (!session) {
-        resolvedTraveler = null;
-        showGate();
-        onReady(null);
-        return;
-      }
+      try {
+        var sessionRes = await supabase.auth.getSession();
+        var session = sessionRes.data.session;
+        if (!session) {
+          resolvedTraveler = null;
+          showGate();
+          onReady(null);
+          return;
+        }
 
-      var traveler = await resolveTraveler(supabase, session.user);
-      if (!traveler) {
-        resolvedTraveler = null;
-        showGate("Aucun voyage associé à cet email pour l'instant. Contactez Alexia.");
-        onReady(null);
-        return;
-      }
+        var traveler = await resolveTraveler(supabase, session.user);
+        if (!traveler) {
+          resolvedTraveler = null;
+          showGate("Aucun voyage associé à cet email pour l'instant. Contactez Alexia.");
+          onReady(null);
+          return;
+        }
 
-      resolvedTraveler = traveler;
-      // On NE masque PAS l'écran de connexion ici : il reste affiché
-      // (couvrant le contenu de démo), mais bascule sur un indicateur de
-      // chargement plutôt que de rester figé sur le formulaire — jusqu'à
-      // ce que le voyage soit vraiment chargé et affiché, voir
-      // hideAuthGate() dans bootstrap.js.
-      showGateLoading();
-      onReady(traveler);
+        resolvedTraveler = traveler;
+        // On NE masque PAS l'écran de connexion ici : il reste affiché
+        // (couvrant le contenu de démo), mais bascule sur un indicateur de
+        // chargement plutôt que de rester figé sur le formulaire — jusqu'à
+        // ce que le voyage soit vraiment chargé et affiché, voir
+        // hideAuthGate() dans bootstrap.js.
+        showGateLoading();
+        onReady(traveler);
+      } catch (err) {
+        // Hors-ligne (ou Supabase injoignable) : si ce voyageur a déjà
+        // chargé son voyage avec succès sur cet appareil, on repart de ce
+        // dernier instantané connu plutôt que de rester bloqué sur l'écran
+        // de connexion — voir js/offline.js et loadTravelerTrip().
+        var cache = window.MyCompanion.loadOfflineCache && window.MyCompanion.loadOfflineCache();
+        if (cache && cache.traveler) {
+          console.warn('[MyCompanion] Connexion indisponible, reprise du cache hors-ligne.', err);
+          resolvedTraveler = cache.traveler;
+          showGateLoading();
+          onReady(cache.traveler, true);
+          return;
+        }
+        resolvedTraveler = null;
+        showGate('Impossible de vous connecter pour le moment. Vérifiez votre connexion.');
+        onReady(null);
+      }
     }
 
     supabase.auth.onAuthStateChange(function () {

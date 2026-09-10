@@ -4,15 +4,34 @@
 // auth.js) prend le relais : une fois un voyageur identifié, on charge son
 // voyage et on remplace le contenu de démo par ses vraies données.
 (function () {
-  async function loadTravelerTrip(traveler) {
+  async function loadTravelerTrip(traveler, isOffline) {
     try {
-      var bundle = await window.MyCompanion.fetchTripBundle(traveler.trip_id);
+      var cache = window.MyCompanion.loadOfflineCache && window.MyCompanion.loadOfflineCache();
+      var bundle = isOffline ? null : await window.MyCompanion.fetchTripBundle(traveler.trip_id);
+      var usingCache = false;
+
       if (!bundle) {
-        if (window.MyCompanion.showAuthGate) {
-          window.MyCompanion.showAuthGate('Impossible de charger votre voyage pour le moment. Réessayez plus tard.');
+        // Pas de réseau (ou requête en échec) : on retombe sur le dernier
+        // instantané connu de CE voyage sur cet appareil plutôt que de
+        // bloquer sur l'écran de connexion — voir js/offline.js.
+        if (cache && cache.bundle && cache.traveler && cache.traveler.trip_id === traveler.trip_id) {
+          bundle = cache.bundle;
+          usingCache = true;
+        } else {
+          if (window.MyCompanion.showAuthGate) {
+            window.MyCompanion.showAuthGate('Impossible de charger votre voyage pour le moment. Réessayez plus tard.');
+          }
+          return;
         }
-        return;
       }
+
+      if (window.MyCompanion.setOfflineBanner) {
+        window.MyCompanion.setOfflineBanner(usingCache ? cache.savedAt : null);
+      }
+      if (!usingCache && window.MyCompanion.saveOfflineCache) {
+        window.MyCompanion.saveOfflineCache(traveler, bundle);
+      }
+
       window.MyCompanion.renderHome(bundle.trip, traveler, bundle.days);
       window.MyCompanion.renderItinerary(bundle.days);
       window.MyCompanion.renderFlights(bundle.flights);
@@ -74,8 +93,8 @@
     if (!cfg || !supabase) return;
 
     if (window.MyCompanion.initAuth) {
-      window.MyCompanion.initAuth(function (traveler) {
-        if (traveler) loadTravelerTrip(traveler);
+      window.MyCompanion.initAuth(function (traveler, isOffline) {
+        if (traveler) loadTravelerTrip(traveler, isOffline);
       });
     }
   }

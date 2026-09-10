@@ -673,6 +673,7 @@ window.MyCompanion = window.MyCompanion || {};
       if (!card) return;
       window.MyCompanion.getDocumentSignedUrl(card.dataset.storagePath).then(function (url) {
         if (url) window.MyCompanion.openDocumentViewer(url, card.dataset.title, card.dataset.storagePath);
+        else if (window.MyCompanion.showToast) window.MyCompanion.showToast('Document indisponible hors connexion.');
       });
     });
   };
@@ -774,6 +775,7 @@ window.MyCompanion = window.MyCompanion || {};
       docTile.addEventListener('click', function () {
         window.MyCompanion.getDocumentSignedUrl(docTile.dataset.storagePath).then(function (url) {
           if (url) window.MyCompanion.openDocumentViewer(url, insuranceDoc.title, docTile.dataset.storagePath);
+          else if (window.MyCompanion.showToast) window.MyCompanion.showToast('Document indisponible hors connexion.');
         });
       });
     }

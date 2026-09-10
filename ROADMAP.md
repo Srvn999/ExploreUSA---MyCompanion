@@ -169,6 +169,23 @@
   Urgences, Message à Alexia, Documents, Météo, Rappels, Frais partagés,
   e-SIM + son tuto par marque/méthode générale) + le raccourci "Écrire à
   Alexia" depuis l'accueil + la fiche détail d'étape depuis l'itinéraire
+- Mode hors-ligne (roadbook) : à chaque chargement réussi du voyage, un
+  instantané (itinéraire, documents — leur liste, pas les fichiers,
+  infos urgence, voiture de location, vols, dépenses...) est gardé en
+  local (`localStorage`, `js/offline.js`) sur l'appareil du voyageur.
+  Si la connexion/la session Supabase est indisponible au chargement
+  suivant (zone désertique, parc national, roaming capricieux), l'appli
+  repart automatiquement de ce dernier instantané connu au lieu de
+  bloquer sur l'écran de connexion — un bandeau "Mode hors-ligne —
+  dernières données du [date/heure]" s'affiche en haut de l'appli tant
+  que ces données ne sont pas rafraîchies. N'importe quel chargement en
+  ligne réussi remet à jour le cache et masque le bandeau. Limite
+  assumée : seules les métadonnées des documents sont mises en cache,
+  pas les fichiers eux-mêmes (PDF/photos) — ouvrir un document reste
+  impossible hors connexion (URL signée à la demande), un petit message
+  l'indique maintenant au lieu de ne rien faire silencieusement. Cache
+  vidé à la déconnexion (`signOut`), pour un appareil parfois partagé en
+  famille/groupe d'amis
 
 ## À faire
 
