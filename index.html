@@ -268,9 +268,16 @@
   }
   .tool-btn.active{ background:var(--terracotta); border-color:var(--terracotta); color:#fff; }
   .tool-btn:disabled{ opacity:.4; cursor:default; }
+  .translator-result-wrap{ position:relative; margin-top:12px; }
   .translator-result{
-    margin-top:12px; background:var(--sand-dark); border-radius:12px; padding:14px;
+    background:var(--sand-dark); border-radius:12px; padding:14px 42px 14px 14px;
     font-size:15px; font-weight:600; color:var(--navy); line-height:1.5;
+    user-select:text; -webkit-user-select:text;
+  }
+  .translator-copy{
+    position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:50%;
+    border:none; background:var(--white); color:var(--navy); display:flex; align-items:center;
+    justify-content:center; cursor:pointer; padding:0; box-shadow:0 1px 4px rgba(28,43,69,0.18);
   }
   .rt-row{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; color:#5b5748;}
   .rt-row.grand{font-size:18px; font-weight:800; color:var(--navy); margin-top:8px;}
@@ -913,7 +920,12 @@
         </div>
         <input type="file" id="tradCameraInput" accept="image/*" capture="environment" hidden onchange="handleTradPhoto(this.files[0]); this.value='';">
         <button type="button" onclick="runTranslate()" style="background:var(--navy); color:#fff; border:none; padding:11px; border-radius:10px; font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer; width:100%; margin-top:10px;">Traduire</button>
-        <div id="tradResult" class="translator-result" hidden></div>
+        <div class="translator-result-wrap" id="tradResultWrap" hidden>
+          <div id="tradResult" class="translator-result"></div>
+          <button type="button" id="tradCopyBtn" class="translator-copy" onclick="copyTradResult()" title="Copier">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          </button>
+        </div>
         <p id="tradStatus" style="font-size:12px; color:#8a8470; min-height:16px; margin:8px 0 0;"></p>
       </div>
       <div class="tip-explainer">
@@ -1425,9 +1437,36 @@
     const input = document.getElementById('tradInput');
     input.value = '';
     onTradInputChange();
-    document.getElementById('tradResult').hidden = true;
+    document.getElementById('tradResultWrap').hidden = true;
     document.getElementById('tradStatus').textContent = '';
     input.focus();
+  }
+
+  async function copyTradResult(){
+    const text = document.getElementById('tradResult').textContent;
+    if(!text) return;
+    const copyBtn = document.getElementById('tradCopyBtn');
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+      } else {
+        const helper = document.createElement('textarea');
+        helper.value = text;
+        helper.style.position = 'fixed';
+        helper.style.opacity = '0';
+        document.body.appendChild(helper);
+        helper.select();
+        document.execCommand('copy');
+        document.body.removeChild(helper);
+      }
+      if(copyBtn){
+        const original = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>';
+        setTimeout(()=>{ copyBtn.innerHTML = original; }, 1500);
+      }
+    } catch(err){
+      // Rien de grave : le texte reste sélectionnable à la main dans le pire des cas.
+    }
   }
 
   function swapTranslator(){
@@ -1441,25 +1480,26 @@
   async function runTranslate(){
     const input = document.getElementById('tradInput');
     const resultEl = document.getElementById('tradResult');
+    const resultWrap = document.getElementById('tradResultWrap');
     const statusEl = document.getElementById('tradStatus');
     const text = input.value.trim();
-    if(!text){ statusEl.textContent = ''; resultEl.hidden = true; return; }
+    if(!text){ statusEl.textContent = ''; resultWrap.hidden = true; return; }
     const from = document.getElementById('tradFrom').value;
     const to = document.getElementById('tradTo').value;
     if(from === to){
       resultEl.textContent = text;
-      resultEl.hidden = false;
+      resultWrap.hidden = false;
       statusEl.textContent = '';
       return;
     }
     statusEl.textContent = 'Traduction en cours...';
-    resultEl.hidden = true;
+    resultWrap.hidden = true;
     const translated = window.MyCompanion && window.MyCompanion.translateText
       ? await window.MyCompanion.translateText(text, from, to)
       : null;
     if(translated){
       resultEl.textContent = translated;
-      resultEl.hidden = false;
+      resultWrap.hidden = false;
       statusEl.textContent = '';
     } else {
       statusEl.textContent = "Traduction indisponible pour l'instant, réessayez.";
@@ -1522,7 +1562,7 @@
 
     if(cameraBtn) cameraBtn.disabled = true;
     statusEl.textContent = 'Lecture du texte en cours...';
-    document.getElementById('tradResult').hidden = true;
+    document.getElementById('tradResultWrap').hidden = true;
     const lang = TRAD_OCR_LANGS[document.getElementById('tradFrom').value] || 'eng';
     try{
       const result = await window.Tesseract.recognize(file, lang);
