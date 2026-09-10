@@ -235,6 +235,14 @@
   l'appli : la position ne quitte l'appareil que dans le message que le
   voyageur envoie lui-même (js/sos.js)
 
+- Météo multi-jours pour la recherche libre : l'écran Météo affichait
+  déjà toutes les étapes du voyage (pas que le jour courant), mais la
+  recherche libre d'un lieu ne montrait que la météo du jour même.
+  Ajout d'une petite frise de prévisions (aujourd'hui + 5 jours) sous le
+  résultat de recherche, pour prévoir les tenues avant d'arriver quelque
+  part. Un seul appel Open-Meteo suffit (forecast_days=6 au lieu de 1),
+  pas d'appel supplémentaire
+
 ## À faire
 
 ### Connexion & sécurité

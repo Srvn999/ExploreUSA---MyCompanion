@@ -104,6 +104,20 @@ window.MyCompanion = window.MyCompanion || {};
     return timeStr ? String(timeStr).replace(':', 'h') : '';
   }
 
+  // "Lun", "Mar"... à partir d'une date seule (YYYY-MM-DD) — même
+  // reconstruction en local que formatLongDate, pour la même raison.
+  function formatWeekdayShort(dateStr) {
+    if (!dateStr) return '';
+    var parts = String(dateStr).split('-');
+    if (parts.length !== 3) return '';
+    try {
+      var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '');
+    } catch (e) {
+      return '';
+    }
+  }
+
   // ---- Visionneuse de document (image/PDF affichés dans l'appli plutôt
   // que de compter sur le comportement — parfois un téléchargement forcé
   // — d'un nouvel onglet du navigateur) ----
@@ -864,6 +878,24 @@ window.MyCompanion = window.MyCompanion || {};
     }
 
     var codeInfo = WEATHER_CODES[weather.weatherCode] || ['🌡️', 'Météo'];
+    var todayIso = new Date().toISOString().slice(0, 10);
+    var forecastStrip = !weather.days || !weather.days.length ? '' : (
+      '<div class="weather-forecast-strip">' +
+      weather.days
+        .map(function (d) {
+          var dayInfo = WEATHER_CODES[d.weatherCode] || ['🌡️', 'Météo'];
+          return (
+            '<div class="weather-forecast-chip">' +
+            '<div class="day-label">' + (d.date === todayIso ? "Aujourd'hui" : escapeHtml(formatWeekdayShort(d.date))) + '</div>' +
+            '<div class="ic">' + dayInfo[0] + '</div>' +
+            '<div class="temps">' + d.maxTemp + '° <span>' + d.minTemp + '°</span></div>' +
+            '</div>'
+          );
+        })
+        .join('') +
+      '</div>'
+    );
+
     resultEl.innerHTML =
       '<div class="weather-card">' +
       '<div class="wc-place">' + escapeHtml(weather.place) + '</div>' +
@@ -873,7 +905,9 @@ window.MyCompanion = window.MyCompanion || {};
       '<div class="wc-minmax">' +
       (weather.minTemp != null ? '<span>Min <b>' + weather.minTemp + '°</b></span>' : '') +
       (weather.maxTemp != null ? '<span>Max <b>' + weather.maxTemp + '°</b></span>' : '') +
-      '</div></div>';
+      '</div>' +
+      forecastStrip +
+      '</div>';
   };
 
   window.MyCompanion.initWeatherSearch = function () {
