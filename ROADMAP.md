@@ -252,6 +252,15 @@
   l'ouverture de l'écran seulement (js/journal.js). Migration
   `0016_journal.sql` à appliquer une fois dans Supabase (SQL editor)
 
+- Checklist voyage (départ/retour) : nouvelle tuile dans Plus, deux
+  listes à cocher personnalisables (ajout/suppression libres d'éléments)
+  pré-remplies avec des repères généraux non spécifiques à un
+  prestataire précis (passeport, ESTA, assurance, adaptateur de prise,
+  poids des bagages, douane...). Purement locale à l'appareil
+  (`localStorage`, clé par voyageur, `js/checklist.js`) : pas de table
+  Supabase, une checklist n'a pas besoin de se synchroniser entre
+  appareils et son contenu ne regarde qu'un seul voyageur
+
 ## À faire
 
 ### Connexion & sécurité
