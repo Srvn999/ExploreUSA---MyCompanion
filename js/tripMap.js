@@ -26,6 +26,22 @@ window.MyCompanion = window.MyCompanion || {};
     });
   }
 
+  // Essaie de géocoder un libellé, avec un cache qui retient aussi les
+  // échecs (évite de re-solliciter l'API gratuite pour un lieu qui a déjà
+  // échoué, ex. plusieurs étapes au même endroit non trouvé).
+  async function resolveCoords(label, cache) {
+    if (!label) return null;
+    if (Object.prototype.hasOwnProperty.call(cache, label)) return cache[label];
+    var coords = await window.MyCompanion.geocodeLabel(label);
+    cache[label] = coords;
+    if (coords) {
+      // Petite pause entre deux vrais appels : reste raisonnable vis-à-vis
+      // de l'API gratuite de géocodage quand il y a beaucoup d'étapes.
+      await new Promise(function (r) { setTimeout(r, 120); });
+    }
+    return coords;
+  }
+
   async function buildMap() {
     var container = document.getElementById('itineraryMapEl');
     var status = statusEl();
@@ -53,14 +69,31 @@ window.MyCompanion = window.MyCompanion || {};
     markersLayer.clearLayers();
     if (status) status.textContent = 'Repérage des étapes sur la carte...';
 
+    // Plusieurs candidats par étape, essayés dans l'ordre : le "nom du
+    // lieu pour Maps" saisi par Alexia est en général le plus fiable pour
+    // ce service de géocodage (pensé pour des lieux/villes, pas une
+    // adresse postale complète), mais on retente avec l'adresse puis le
+    // titre si besoin — et en dernier recours le lieu du jour (même champ
+    // que la météo, déjà fiable), pour au moins situer l'étape par ville.
     var entries = [];
     (lastDays || []).forEach(function (day) {
       (day.itinerary_items || []).forEach(function (item) {
-        var label = item.map_query || item.title;
-        if (label) entries.push({ label: label, title: item.title, dayNumber: day.day_number, time: item.time, kind: 'étape' });
+        var candidates = [item.map_query, item.address, item.title].filter(Boolean);
+        if (candidates.length) {
+          entries.push({
+            candidates: candidates, fallback: day.location_label,
+            title: item.title, dayNumber: day.day_number, time: item.time, kind: 'étape',
+          });
+        }
       });
       (day.day_tips || []).forEach(function (tip) {
-        if (tip.map_query) entries.push({ label: tip.map_query, title: tip.title, dayNumber: day.day_number, time: null, kind: 'suggestion' });
+        var candidates = [tip.map_query].filter(Boolean);
+        if (candidates.length) {
+          entries.push({
+            candidates: candidates, fallback: day.location_label,
+            title: tip.title, dayNumber: day.day_number, time: null, kind: 'suggestion',
+          });
+        }
       });
     });
 
@@ -75,16 +108,12 @@ window.MyCompanion = window.MyCompanion || {};
     var points = [];
     for (var i = 0; i < entries.length; i++) {
       var entry = entries[i];
-      var coords = geocodeCache[entry.label];
-      if (!coords) {
-        coords = await window.MyCompanion.geocodeLabel(entry.label);
-        if (coords) {
-          geocodeCache[entry.label] = coords;
-          // Petite pause entre deux vrais appels : reste raisonnable vis-
-          // à-vis de l'API gratuite de géocodage quand il y a beaucoup
-          // d'étapes sur un même voyage.
-          await new Promise(function (r) { setTimeout(r, 120); });
-        }
+      var coords = null;
+      for (var c = 0; c < entry.candidates.length && !coords; c++) {
+        coords = await resolveCoords(entry.candidates[c], geocodeCache);
+      }
+      if (!coords && entry.fallback) {
+        coords = await resolveCoords(entry.fallback, geocodeCache);
       }
       if (coords) points.push({ lat: coords.lat, lon: coords.lon, entry: entry });
     }
